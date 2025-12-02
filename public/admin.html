@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Cricket Auction</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>🏏 Admin Dashboard</h1>
+            <div class="nav-links">
+                <span id="adminUsername"></span>
+                <button onclick="logout()" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard">
+            <!-- Add Team Section -->
+            <section class="card">
+                <h2>Add New Team</h2>
+                <form id="addTeamForm">
+                    <div class="form-group">
+                        <label for="teamName">Team Name</label>
+                        <input type="text" id="teamName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="teamBudget">Budget (₹)</label>
+                        <input type="number" id="teamBudget" name="budget" value="10000000" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Team</button>
+                </form>
+            </section>
+
+            <!-- Add Player Section -->
+            <section class="card">
+                <h2>Add New Player</h2>
+                <form id="addPlayerForm">
+                    <div class="form-group">
+                        <label for="playerName">Player Name</label>
+                        <input type="text" id="playerName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="playerRole">Role</label>
+                        <select id="playerRole" name="role" required>
+                            <option value="Batsman">Batsman</option>
+                            <option value="Bowler">Bowler</option>
+                            <option value="All-rounder">All-rounder</option>
+                            <option value="Wicket-keeper">Wicket-keeper</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="basePrice">Base Price (₹)</label>
+                        <input type="number" id="basePrice" name="basePrice" value="100000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input type="text" id="country" name="country" value="India" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Player</button>
+                </form>
+            </section>
+
+            <!-- Teams List -->
+            <section class="card">
+                <h2>Teams</h2>
+                <div id="teamsList" class="teams-grid"></div>
+            </section>
+
+            <!-- Players List -->
+            <section class="card">
+                <h2>Players</h2>
+                <div id="playersList" class="players-grid"></div>
+            </section>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
+

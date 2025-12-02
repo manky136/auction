@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Cricket Auction</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>🏏 Cricket Auction</h1>
+            <div class="nav-links">
+                <span id="userUsername"></span>
+                <span id="userTeam" class="team-badge"></span>
+                <button onclick="logout()" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Team Selection (if not selected) -->
+        <div id="teamSelectionSection" class="card" style="display: none;">
+            <h2>Select Your Team</h2>
+            <p>Please select a team before you can start bidding.</p>
+            <div id="teamSelectionList" class="teams-grid"></div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" style="display: none;">
+            <!-- My Team Info -->
+            <section class="card">
+                <h2>My Team</h2>
+                <div id="myTeamInfo"></div>
+            </section>
+
+            <!-- Available Players for Bidding -->
+            <section class="card">
+                <h2>Available Players</h2>
+                <div id="availablePlayers" class="players-grid"></div>
+            </section>
+
+            <!-- Sold Players -->
+            <section class="card">
+                <h2>Sold Players</h2>
+                <div id="soldPlayers" class="players-grid"></div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Bidding Modal -->
+    <div id="bidModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Place Bid</h2>
+            <div id="bidPlayerInfo"></div>
+            <form id="bidForm">
+                <div class="form-group">
+                    <label for="bidAmount">Bid Amount (₹)</label>
+                    <input type="number" id="bidAmount" name="amount" required>
+                    <small>Current Bid: ₹<span id="currentBid"></span></small>
+                </div>
+                <button type="submit" class="btn btn-primary">Place Bid</button>
+            </form>
+            <div id="bidHistory" class="bid-history"></div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="user.js"></script>
+</body>
+</html>
+

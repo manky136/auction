@@ -1,0 +1,16 @@
+services:
+  # Main web service (serves both frontend and backend)
+  - type: web
+    name: cricket-auction
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+    # Health check path
+    healthCheckPath: /
+

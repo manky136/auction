@@ -1,0 +1,13 @@
+[build]
+  publish = "public"
+  command = "echo 'No build needed for static files'"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Note: Set API_URL environment variable in Netlify dashboard
+# Go to Site settings → Environment variables
+# Add: API_URL = https://your-backend-url.onrender.com/api
+

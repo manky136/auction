@@ -1,5 +1,6 @@
 // Authentication and token management
-const API_BASE = 'http://localhost:3000/api';
+// Use environment variable or fallback to localhost for development
+const API_BASE = window.API_BASE_URL || 'http://localhost:3000/api';
 
 // Token management
 function getToken() {

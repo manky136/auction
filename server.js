@@ -7,8 +7,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const PORT = 3000;
-const SECRET_KEY = 'cricket-auction-secret-key-2024';
+const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.SECRET_KEY || 'cricket-auction-secret-key-2024';
 
 // Middleware
 app.use(cors());
@@ -358,6 +358,10 @@ app.get('/api/players/:id/bids', authenticateToken, (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`App is live! Frontend and API available at the same URL.`);
+  }
 });
 

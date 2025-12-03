@@ -1,33 +1,80 @@
-// Authentication and token management
-// Use environment variable or fallback to localhost for development
-const API_BASE = window.API_BASE_URL || 'http://localhost:3000/api';
+const API_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'http://localhost:3000/api';
 
-// Token management
-function getToken() {
-    return localStorage.getItem('token');
+// Login
+async function login(username, password) {
+    const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+    }
+
+    setToken(data.token);
+    setUser(data.user);
+    return data.user;
 }
 
+// Register
+async function register(username, password, role, teamName) {
+    const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, role, teamName })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+    }
+
+    setToken(data.token);
+    setUser(data.user);
+    return data.user;
+}
+
+// Token Management
 function setToken(token) {
     localStorage.setItem('token', token);
 }
 
-function removeToken() {
-    localStorage.removeItem('token');
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function setUser(user) {
+    localStorage.setItem('user', JSON.stringify(user));
 }
 
 function getUser() {
-    const token = getToken();
-    if (!token) return null;
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload;
-    } catch (e) {
-        return null;
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+}
+
+// Display User Info
+function displayUserInfo() {
+    const user = getUser();
+    if (user) {
+        const usernameDisplay = document.getElementById('adminUsername') || document.getElementById('userUsername');
+        if (usernameDisplay) {
+            usernameDisplay.textContent = `Welcome, ${user.username}`;
+        }
+
+        const teamDisplay = document.getElementById('userTeam');
+        if (teamDisplay && user.team) {
+            teamDisplay.textContent = user.team;
+        }
     }
 }
 
-// API request helper
-async function apiRequest(url, options = {}) {
+// API Request Helper
+async function apiRequest(endpoint, options = {}) {
+    showLoader();
     const token = getToken();
     const headers = {
         'Content-Type': 'application/json',
@@ -39,7 +86,7 @@ async function apiRequest(url, options = {}) {
     }
 
     try {
-        const response = await fetch(`${API_BASE}${url}`, {
+        const response = await fetch(`${API_URL}${endpoint}`, {
             ...options,
             headers
         });
@@ -47,103 +94,40 @@ async function apiRequest(url, options = {}) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || 'Request failed');
+            if (response.status === 403 || response.status === 401) {
+                logout();
+            }
+            throw new Error(data.error || 'Something went wrong');
         }
 
         return data;
     } catch (error) {
         throw error;
+    } finally {
+        hideLoader();
     }
 }
 
-// Login functionality
-if (document.getElementById('loginForm')) {
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const errorDiv = document.getElementById('errorMessage');
-        errorDiv.textContent = '';
-        errorDiv.classList.remove('show');
-
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-
-        try {
-            const data = await apiRequest('/login', {
-                method: 'POST',
-                body: JSON.stringify({ username, password })
-            });
-
-            setToken(data.token);
-
-            // Redirect to lobby
-            window.location.href = 'lobby.html';
-        } catch (error) {
-            errorDiv.textContent = error.message;
-            errorDiv.classList.add('show');
-        }
-    });
+// Loader Functions
+function showLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'flex';
 }
 
-// Register functionality
-if (document.getElementById('registerForm')) {
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const errorDiv = document.getElementById('regErrorMessage');
-        errorDiv.textContent = '';
-        errorDiv.classList.remove('show');
-
-        const username = document.getElementById('regUsername').value;
-        const password = document.getElementById('regPassword').value;
-        const roleSelect = document.getElementById('userRole');
-        const role = roleSelect ? roleSelect.value : 'bidder';
-
-        if (!role) {
-            errorDiv.textContent = 'Please select a role (Administrator or Bidder)';
-            errorDiv.classList.add('show');
-            return;
-        }
-
-        try {
-            const data = await apiRequest('/register', {
-                method: 'POST',
-                body: JSON.stringify({ username, password, role })
-            });
-
-            setToken(data.token);
-
-            // Redirect to lobby
-            window.location.href = 'lobby.html';
-        } catch (error) {
-            errorDiv.textContent = error.message;
-            errorDiv.classList.add('show');
-        }
-    });
+function hideLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'none';
 }
 
-// Toggle between login and register
-if (document.getElementById('registerLink')) {
-    document.getElementById('registerLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.querySelector('.login-card').style.display = 'none';
-        document.querySelector('.register-card').style.display = 'block';
-    });
-}
-
-if (document.getElementById('loginLink')) {
-    document.getElementById('loginLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.querySelector('.register-card').style.display = 'none';
-        document.querySelector('.login-card').style.display = 'block';
-    });
-}
-
-// Logout functionality
+// Logout
 function logout() {
-    removeToken();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('currentAuction');
     window.location.href = 'index.html';
 }
 
-// Check authentication on protected pages
+// Check if user is logged in
 function checkAuth() {
     const token = getToken();
     if (!token) {
@@ -152,37 +136,3 @@ function checkAuth() {
     }
     return true;
 }
-
-// Display user info
-function displayUserInfo() {
-    const user = getUser();
-    if (!user) return;
-
-    if (document.getElementById('adminUsername')) {
-        document.getElementById('adminUsername').textContent = `Welcome, ${user.username}`;
-    }
-
-    if (document.getElementById('userUsername')) {
-        document.getElementById('userUsername').textContent = `Welcome, ${user.username}`;
-    }
-
-    if (document.getElementById('userTeam') && user.team) {
-        document.getElementById('userTeam').textContent = `Team: ${user.team}`;
-    }
-}
-
-// Initialize on page load
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (window.location.pathname !== '/index.html' && window.location.pathname !== '/') {
-            checkAuth();
-            displayUserInfo();
-        }
-    });
-} else {
-    if (window.location.pathname !== '/index.html' && window.location.pathname !== '/') {
-        checkAuth();
-        displayUserInfo();
-    }
-}
-

@@ -1,193 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricket PPL Auction - Home</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Cricket Auction System</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <!-- Navigation -->
-    <nav class="navbar-home">
-        <div class="nav-container">
-            <div class="logo">
-                <h1>🏏 Cricket PPL Auction</h1>
+    <div class="container">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>🏏 Cricket Auction</h1>
+                <p>Manage your cricket team auction efficiently</p>
             </div>
-            <div class="nav-buttons">
-                <button class="btn-nav" id="showLoginBtn">Sign In</button>
-                <button class="btn-nav btn-primary-nav" id="showRegisterBtn">Sign Up</button>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1 class="hero-title">Build Your <span class="highlight">Dream Team</span></h1>
-            <p class="hero-subtitle">Experience the thrill of the auction. Bid, win, and dominate the league with your strategic picks.</p>
-            <div class="hero-buttons">
-                <button class="btn-hero btn-hero-primary" id="heroSignUpBtn">Start Bidding</button>
-                <button class="btn-hero btn-hero-secondary" id="heroSignInBtn">Login</button>
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchTab('login')">Login</div>
+                <div class="auth-tab" onclick="switchTab('register')">Register</div>
             </div>
-        </div>
-    </section>
 
-    <!-- About Section -->
-    <section class="about-section">
-        <div class="container">
-            <div class="about-content">
-                <div class="about-text">
-                    <h2 class="section-title">About Our Platform</h2>
-                    <p>Cricket PPL Auction is the ultimate platform for local cricket Premier Leagues. We bring the excitement of professional auctions to your local tournaments.</p>
-                    <p>Whether you're an administrator organizing the league or a team owner building a squad, our system provides real-time bidding, budget tracking, and seamless team management.</p>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-number">100+</span>
-                            <span class="stat-label">Players</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number">Live</span>
-                            <span class="stat-label">Bidding</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number">24/7</span>
-                            <span class="stat-label">Support</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="about-image-wrapper">
-                    <img src="images/cricket-action.jpg" alt="Cricket Action" class="about-img">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section class="how-it-works">
-        <div class="container">
-            <h2 class="section-title center">How It Works</h2>
-            <div class="steps-grid">
-                <div class="step-card">
-                    <div class="step-icon">📝</div>
-                    <h3>1. Register</h3>
-                    <p>Sign up as a bidder or administrator to get started with the auction process.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-icon">👥</div>
-                    <h3>2. Create Teams</h3>
-                    <p>Admins set up teams and budgets. Bidders select their franchise.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-icon">🔨</div>
-                    <h3>3. Bid Live</h3>
-                    <p>Participate in the live auction. Place bids and compete for top players.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-icon">🏆</div>
-                    <h3>4. Build Squad</h3>
-                    <p>Complete your roster within budget and get ready for the tournament.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features-section">
-        <div class="container">
-            <h2 class="section-title center">Key Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Real-time Stats</h3>
-                    <p>Live updates on budgets, sold players, and remaining slots.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💰</div>
-                    <h3>Budget Management</h3>
-                    <p>Smart tools to help you track spending and plan your next bid.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <h3>Mobile Ready</h3>
-                    <p>Bid from anywhere with our fully responsive mobile interface.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content modal-auth">
-            <span class="close">&times;</span>
-            <h2>Welcome Back</h2>
-            <form id="loginForm">
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
                 <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required placeholder="Enter your username">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Sign In</button>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
             </form>
-            <p class="register-link">New here? <a href="#" id="registerLink">Create an account</a></p>
-            <div id="errorMessage" class="error-message"></div>
-        </div>
-    </div>
 
-    <!-- Register Modal -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content modal-auth">
-            <span class="close">&times;</span>
-            <h2>Join the League</h2>
-            <form id="registerForm">
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
                 <div class="form-group">
                     <label for="regUsername">Username</label>
-                    <input type="text" id="regUsername" name="username" required placeholder="Choose a username">
+                    <input type="text" id="regUsername" name="username" required>
                 </div>
                 <div class="form-group">
                     <label for="regPassword">Password</label>
-                    <input type="password" id="regPassword" name="password" required placeholder="Choose a strong password">
+                    <input type="password" id="regPassword" name="password" required>
                 </div>
                 <div class="form-group">
-                    <label for="userRole">I want to sign up as:</label>
-                    <select id="userRole" name="role" required>
-                        <option value="">Select Role</option>
-                        <option value="bidder">Bidder (Team Owner)</option>
-                        <option value="admin">Administrator</option>
+                    <label for="regRole">Role</label>
+                    <select id="regRole" name="role" onchange="toggleTeamName(this.value)">
+                        <option value="user">Team Owner (Bidder)</option>
+                        <option value="admin">Auction Admin</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Create Account</button>
+                <div class="form-group" id="teamNameGroup">
+                    <label for="regTeamName">Team Name</label>
+                    <input type="text" id="regTeamName" name="teamName">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
             </form>
-            <p class="register-link">Already have an account? <a href="#" id="loginLink">Sign in</a></p>
-            <div id="regErrorMessage" class="error-message"></div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">
-                    <h2>🏏 Cricket PPL</h2>
-                </div>
-                <div class="footer-links">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">Contact</a>
-                </div>
-            </div>
-            <p class="copyright">&copy; 2024 Cricket PPL Auction. All rights reserved.</p>
-        </div>
-    </footer>
+    <!-- Loader -->
+    <div id="loader" class="loader-overlay">
+        <div class="cricket-ball"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
 
     <script src="config.js"></script>
     <script src="auth.js"></script>
-    <script src="home.js"></script>
+    <script src="script.js"></script>
 </body>
+
 </html>

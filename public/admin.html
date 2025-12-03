@@ -14,6 +14,8 @@
             <h1>🏏 Admin Dashboard</h1>
             <div class="nav-links">
                 <span id="adminUsername"></span>
+                <button onclick="exportAuctionData()" class="btn btn-success" style="margin-right: 10px;">Export
+                    Data</button>
                 <button onclick="restartAuction()" class="btn btn-danger" style="margin-right: 10px;">Restart
                     Auction</button>
                 <button onclick="logout()" class="btn btn-secondary">Logout</button>
@@ -143,6 +145,12 @@
                 <button type="submit" class="btn btn-primary">Update Player</button>
             </form>
         </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="loader-overlay">
+        <div class="cricket-ball"></div>
+        <div class="loader-text">Loading...</div>
     </div>
 
     <script src="config.js"></script>

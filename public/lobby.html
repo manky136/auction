@@ -11,7 +11,7 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <h1>🏏 Cricket Auction Lobby</h1>
+            <h1>🏏 Auction Lobby</h1>
             <div class="nav-links">
                 <span id="usernameDisplay"></span>
                 <button onclick="logout()" class="btn btn-secondary">Logout</button>
@@ -20,36 +20,48 @@
     </nav>
 
     <div class="container">
-        <div class="dashboard">
-            <!-- Admin Section: Create Auction -->
-            <section id="adminSection" class="card" style="display: none;">
+        <!-- Admin Section -->
+        <div id="adminSection" style="display: none;">
+            <div class="card">
                 <h2>Create New Auction</h2>
                 <form id="createAuctionForm">
                     <div class="form-group">
                         <label for="auctionName">Auction Name</label>
-                        <input type="text" id="auctionName" name="name" placeholder="e.g. IPL 2025" required>
+                        <input type="text" id="auctionName" name="name" placeholder="e.g., IPL 2025" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Create Auction</button>
                 </form>
+            </div>
 
-                <h3 style="margin-top: 2rem;">My Auctions</h3>
-                <div id="myAuctionsList" class="teams-grid"></div>
-            </section>
+            <div class="card">
+                <h2>Your Auctions</h2>
+                <div id="adminAuctionsList" class="teams-grid">
+                    <!-- Auctions will be loaded here -->
+                </div>
+            </div>
+        </div>
 
-            <!-- Bidder Section: Join Auction -->
-            <section id="bidderSection" class="card" style="display: none;">
+        <!-- User Section -->
+        <div id="userSection" style="display: none;">
+            <div class="card">
                 <h2>Join Auction</h2>
+                <p>Enter the 6-character auction code provided by the admin.</p>
                 <form id="joinAuctionForm">
                     <div class="form-group">
                         <label for="auctionCode">Auction Code</label>
-                        <input type="text" id="auctionCode" name="code" placeholder="Enter 6-character code"
-                            maxlength="6" required
-                            style="text-transform: uppercase; letter-spacing: 2px; font-size: 1.2rem; text-align: center;">
+                        <input type="text" id="auctionCode" name="code" placeholder="e.g., A1B2C3" maxlength="6"
+                            style="text-transform: uppercase;" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Join Auction</button>
                 </form>
-            </section>
+            </div>
         </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader" class="loader-overlay">
+        <div class="cricket-ball"></div>
+        <div class="loader-text">Loading...</div>
     </div>
 
     <script src="config.js"></script>

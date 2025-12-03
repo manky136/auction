@@ -240,6 +240,31 @@ async function restartAuction() {
     }
 }
 
+// Export Auction Data
+async function exportAuctionData() {
+    try {
+        const teams = await apiRequest(`/teams?auctionId=${currentAuction.id}`);
+        const players = await apiRequest(`/players?auctionId=${currentAuction.id}`);
+
+        const exportData = {
+            auction: currentAuction,
+            teams: teams,
+            players: players,
+            exportedAt: new Date().toISOString()
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `auction_data_${currentAuction.code}.json`);
+        document.body.appendChild(downloadAnchorNode); // required for firefox
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    } catch (error) {
+        alert('Failed to export data: ' + error.message);
+    }
+}
+
 // Sell player
 async function sellPlayer(playerId) {
     if (!confirm('Are you sure you want to sell this player to the current highest bidder?')) {
@@ -372,4 +397,3 @@ if (document.readyState === 'loading') {
 } else {
     initAdmin();
 }
-

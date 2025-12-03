@@ -72,7 +72,11 @@
                         <label for="playerImage">Image URL</label>
                         <input type="url" id="playerImage" name="imageUrl" placeholder="https://example.com/photo.jpg">
                     </div>
-                    <button type="submit" class="btn btn-primary">Add Player</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary">Add Player</button>
+                        <button type="button" class="btn btn-secondary" onclick="openImportModal()">Import from
+                            Library</button>
+                    </div>
                 </form>
             </section>
 
@@ -144,6 +148,23 @@
                 </div>
                 <button type="submit" class="btn btn-primary">Update Player</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Import Players Modal -->
+    <div id="importPlayersModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeImportModal()">&times;</span>
+            <h2>Import Players from Library</h2>
+            <div class="form-group">
+                <input type="text" id="librarySearch" placeholder="Search players..." onkeyup="filterLibrary()">
+            </div>
+            <div id="libraryList" class="library-grid">
+                <!-- Players will be loaded here -->
+            </div>
+            <div class="modal-actions" style="margin-top: 20px; text-align: right;">
+                <button onclick="importSelectedPlayers()" class="btn btn-primary">Import Selected</button>
+            </div>
         </div>
     </div>
 

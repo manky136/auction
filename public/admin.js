@@ -391,6 +391,87 @@ function showError(message) {
     alert(message); // Simple alert for now
 }
 
+// --- Player Library Functions ---
+
+let libraryPlayers = [];
+
+async function openImportModal() {
+    try {
+        const players = await apiRequest('/admin/library/players');
+        libraryPlayers = players;
+        renderLibrary(players);
+        document.getElementById('importPlayersModal').style.display = 'flex';
+    } catch (error) {
+        showError('Failed to load library: ' + error.message);
+    }
+}
+
+function closeImportModal() {
+    document.getElementById('importPlayersModal').style.display = 'none';
+}
+
+function renderLibrary(players) {
+    const list = document.getElementById('libraryList');
+    list.innerHTML = '';
+
+    if (players.length === 0) {
+        list.innerHTML = '<p>No players in library yet.</p>';
+        return;
+    }
+
+    players.forEach(player => {
+        const item = document.createElement('div');
+        item.className = 'library-item';
+        item.innerHTML = `
+            <input type="checkbox" class="player-select" value="${player.name}" data-player='${JSON.stringify(player).replace(/'/g, "&apos;")}'>
+            <div class="library-player-info">
+                ${player.imageUrl ? `<img src="${player.imageUrl}" class="mini-player-img">` : ''}
+                <div>
+                    <strong>${player.name}</strong><br>
+                    <small>${player.role} - ${player.country}</small>
+                </div>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function filterLibrary() {
+    const query = document.getElementById('librarySearch').value.toLowerCase();
+    const filtered = libraryPlayers.filter(p =>
+        p.name.toLowerCase().includes(query) ||
+        p.role.toLowerCase().includes(query) ||
+        p.country.toLowerCase().includes(query)
+    );
+    renderLibrary(filtered);
+}
+
+async function importSelectedPlayers() {
+    const checkboxes = document.querySelectorAll('.player-select:checked');
+    const selectedPlayers = Array.from(checkboxes).map(cb => JSON.parse(cb.dataset.player));
+
+    if (selectedPlayers.length === 0) {
+        alert('Please select players to import');
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/admin/players/bulk', {
+            method: 'POST',
+            body: JSON.stringify({
+                players: selectedPlayers,
+                auctionId: currentAuction.id
+            })
+        });
+
+        showSuccess(`Successfully imported ${response.count} players!`);
+        closeImportModal();
+        loadPlayers();
+    } catch (error) {
+        showError('Import failed: ' + error.message);
+    }
+}
+
 // Initialize when page loads
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAdmin);

@@ -556,6 +556,62 @@ app.get('/api/players/:id/bids', authenticateToken, (req, res) => {
   res.json(playerBids.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
 });
 
+// Get Player Library (Unique players from admin's auctions)
+app.get('/api/admin/library/players', authenticateToken, requireAdmin, (req, res) => {
+  const auctions = readJSON(AUCTIONS_FILE);
+  const players = readJSON(PLAYERS_FILE);
+
+  // Get all auction IDs created by this admin
+  const adminAuctionIds = auctions
+    .filter(a => a.adminId === req.user.id)
+    .map(a => a.id);
+
+  // Get all players from these auctions
+  const adminPlayers = players.filter(p => adminAuctionIds.includes(p.auctionId));
+
+  // Deduplicate by name (keep the latest one)
+  const uniquePlayers = {};
+  adminPlayers.forEach(p => {
+    uniquePlayers[p.name] = p;
+  });
+
+  res.json(Object.values(uniquePlayers));
+});
+
+// Bulk Import Players
+app.post('/api/admin/players/bulk', authenticateToken, requireAdmin, (req, res) => {
+  const { players: newPlayersData, auctionId } = req.body;
+
+  if (!auctionId) return res.status(400).json({ error: 'Auction ID required' });
+  if (!newPlayersData || !Array.isArray(newPlayersData)) return res.status(400).json({ error: 'Invalid players data' });
+
+  const players = readJSON(PLAYERS_FILE);
+  let maxId = players.length > 0 ? Math.max(...players.map(p => p.id)) : 0;
+
+  const createdPlayers = newPlayersData.map(p => {
+    maxId++;
+    return {
+      id: maxId,
+      auctionId: parseInt(auctionId),
+      name: p.name,
+      role: p.role || 'All-rounder',
+      basePrice: p.basePrice || 100000,
+      country: p.country || 'India',
+      imageUrl: p.imageUrl || 'https://via.placeholder.com/150',
+      currentBid: p.basePrice || 100000,
+      currentBidder: null,
+      sold: false,
+      soldTo: null,
+      soldPrice: null
+    };
+  });
+
+  players.push(...createdPlayers);
+  writeJSON(PLAYERS_FILE, players);
+
+  res.json({ success: true, count: createdPlayers.length });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);

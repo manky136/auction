@@ -1,108 +1,85 @@
-// Home page functionality - Modal management
+// Home page functionality for simple login/register page
 
-// Check if user is already logged in
-function checkLoggedIn() {
+// Tab switching
+function switchTab(tab) {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const loginTab = document.querySelector('.auth-tab:first-child');
+    const registerTab = document.querySelector('.auth-tab:last-child');
+
+    if (tab === 'login') {
+        loginForm.classList.add('active');
+        registerForm.classList.remove('active');
+        loginTab.classList.add('active');
+        registerTab.classList.remove('active');
+    } else {
+        registerForm.classList.add('active');
+        loginForm.classList.remove('active');
+        registerTab.classList.add('active');
+        loginTab.classList.remove('active');
+    }
+}
+
+// Toggle team name field
+function toggleTeamName(role) {
+    const teamNameGroup = document.getElementById('teamNameGroup');
+    if (role === 'user') {
+        teamNameGroup.style.display = 'block';
+        document.getElementById('regTeamName').required = true;
+    } else {
+        teamNameGroup.style.display = 'none';
+        document.getElementById('regTeamName').required = false;
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', () => {
+    // Hide loader initially
+    hideLoader();
+
+    // Check if user is already logged in
     const user = getUser();
     if (user) {
-        // Redirect to appropriate dashboard
-        if (user.role === 'admin') {
-            window.location.href = 'admin.html';
-        } else {
-            window.location.href = 'user.html';
-        }
+        // Redirect to lobby page
+        window.location.href = 'lobby.html';
+        return;
     }
-}
 
-// Show login modal
-function showLoginModal() {
-    document.getElementById('registerModal').style.display = 'none';
-    document.getElementById('loginModal').style.display = 'block';
-}
-
-// Show register modal
-function showRegisterModal() {
-    document.getElementById('loginModal').style.display = 'none';
-    document.getElementById('registerModal').style.display = 'block';
-}
-
-// Close modals
-function closeModals() {
-    document.getElementById('loginModal').style.display = 'none';
-    document.getElementById('registerModal').style.display = 'none';
-}
-
-// Event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    // Navbar buttons
-    const showLoginBtn = document.getElementById('showLoginBtn');
-    const showRegisterBtn = document.getElementById('showRegisterBtn');
-    
-    // Hero buttons
-    const heroSignInBtn = document.getElementById('heroSignInBtn');
-    const heroSignUpBtn = document.getElementById('heroSignUpBtn');
-    
-    // Modal close buttons
-    const closeButtons = document.querySelectorAll('.close');
-    
-    // Register/Login toggle links
-    const registerLink = document.getElementById('registerLink');
-    const loginLink = document.getElementById('loginLink');
-    
-    // Navbar buttons
-    if (showLoginBtn) {
-        showLoginBtn.addEventListener('click', showLoginModal);
-    }
-    
-    if (showRegisterBtn) {
-        showRegisterBtn.addEventListener('click', showRegisterModal);
-    }
-    
-    // Hero buttons
-    if (heroSignInBtn) {
-        heroSignInBtn.addEventListener('click', showLoginModal);
-    }
-    
-    if (heroSignUpBtn) {
-        heroSignUpBtn.addEventListener('click', showRegisterModal);
-    }
-    
-    // Close buttons
-    closeButtons.forEach(btn => {
-        btn.addEventListener('click', closeModals);
-    });
-    
-    // Toggle links
-    if (registerLink) {
-        registerLink.addEventListener('click', (e) => {
+    // Handle login form
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            showRegisterModal();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const user = await login(username, password);
+                // Redirect to lobby after successful login
+                window.location.href = 'lobby.html';
+            } catch (error) {
+                alert(error.message);
+            }
         });
     }
-    
-    if (loginLink) {
-        loginLink.addEventListener('click', (e) => {
+
+    // Handle register form
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            showLoginModal();
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+            const teamName = document.getElementById('regTeamName').value;
+
+            try {
+                const user = await register(username, password, role, teamName);
+                // Redirect to lobby after successful registration
+                window.location.href = 'lobby.html';
+            } catch (error) {
+                alert(error.message);
+            }
         });
     }
-    
-    // Close modal when clicking outside
-    window.addEventListener('click', (e) => {
-        const loginModal = document.getElementById('loginModal');
-        const registerModal = document.getElementById('registerModal');
-        
-        if (e.target === loginModal) {
-            closeModals();
-        }
-        if (e.target === registerModal) {
-            closeModals();
-        }
-    });
-    
-    // Add home-page class to body
-    document.body.classList.add('home-page');
-    
-    // Check if user is already logged in
-    checkLoggedIn();
 });
-

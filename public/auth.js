@@ -98,15 +98,29 @@ if (document.getElementById('registerForm')) {
 
         const username = document.getElementById('regUsername').value;
         const password = document.getElementById('regPassword').value;
+        const roleSelect = document.getElementById('userRole');
+        const role = roleSelect ? roleSelect.value : 'bidder';
+
+        if (!role) {
+            errorDiv.textContent = 'Please select a role (Administrator or Bidder)';
+            errorDiv.classList.add('show');
+            return;
+        }
 
         try {
             const data = await apiRequest('/register', {
                 method: 'POST',
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, password, role })
             });
 
             setToken(data.token);
-            window.location.href = 'user.html';
+            
+            // Redirect based on role
+            if (data.user.role === 'admin') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'user.html';
+            }
         } catch (error) {
             errorDiv.textContent = error.message;
             errorDiv.classList.add('show');

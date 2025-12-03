@@ -122,18 +122,31 @@ app.post('/api/login', (req, res) => {
 
 // Register
 app.post('/api/register', (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, role } = req.body;
   const users = readJSON(USERS_FILE);
 
   if (users.find(u => u.username === username)) {
     return res.status(400).json({ error: 'Username already exists' });
   }
 
+  // Validate role
+  const validRoles = ['admin', 'bidder', 'user'];
+  let userRole = role || 'bidder';
+  
+  // Map 'bidder' to 'user' for backward compatibility
+  if (userRole === 'bidder') {
+    userRole = 'user';
+  }
+  
+  if (!validRoles.includes(userRole)) {
+    return res.status(400).json({ error: 'Invalid role. Must be admin or bidder' });
+  }
+
   const newUser = {
     id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
     username,
     password: bcrypt.hashSync(password, 10),
-    role: 'user',
+    role: userRole,
     team: null
   };
 

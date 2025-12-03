@@ -5,7 +5,7 @@ let selectedPlayerId = null;
 // Initialize user dashboard
 async function initUser() {
     if (!checkAuth()) return;
-    
+
     const user = getUser();
     if (user.role === 'admin') {
         window.location.href = 'admin.html';
@@ -13,7 +13,7 @@ async function initUser() {
     }
 
     displayUserInfo();
-    
+
     // Check if user has selected a team
     if (!user.team) {
         await loadTeamSelection();
@@ -31,10 +31,10 @@ async function loadTeamSelection() {
         const teams = await apiRequest('/teams');
         const teamSelectionSection = document.getElementById('teamSelectionSection');
         const teamSelectionList = document.getElementById('teamSelectionList');
-        
+
         teamSelectionSection.style.display = 'block';
         document.getElementById('userDashboard').style.display = 'none';
-        
+
         teamSelectionList.innerHTML = '';
 
         if (teams.length === 0) {
@@ -138,7 +138,7 @@ async function loadAvailablePlayers() {
         const players = await apiRequest('/players');
         const availablePlayers = players.filter(p => !p.sold);
         const availablePlayersDiv = document.getElementById('availablePlayers');
-        
+
         availablePlayersDiv.innerHTML = '';
 
         if (availablePlayers.length === 0) {
@@ -179,7 +179,7 @@ async function loadSoldPlayers() {
         const players = await apiRequest('/players');
         const soldPlayers = players.filter(p => p.sold);
         const soldPlayersDiv = document.getElementById('soldPlayers');
-        
+
         soldPlayersDiv.innerHTML = '';
 
         if (soldPlayers.length === 0) {
@@ -214,7 +214,7 @@ async function loadSoldPlayers() {
 function setupBidModal() {
     const modal = document.getElementById('bidModal');
     const closeBtn = document.querySelector('.close');
-    
+
     closeBtn.onclick = () => {
         modal.style.display = 'none';
     };
@@ -228,13 +228,13 @@ function setupBidModal() {
     document.getElementById('bidForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const amount = parseInt(document.getElementById('bidAmount').value);
-        
+
         try {
             await apiRequest(`/players/${selectedPlayerId}/bid`, {
                 method: 'POST',
                 body: JSON.stringify({ amount })
             });
-            
+
             modal.style.display = 'none';
             await loadUserDashboard();
             alert('Bid placed successfully!');
@@ -248,22 +248,28 @@ function setupBidModal() {
 async function openBidModal(playerId) {
     selectedPlayerId = playerId;
     const modal = document.getElementById('bidModal');
-    
+
     try {
         const player = await apiRequest(`/players/${playerId}`);
         const bids = await apiRequest(`/players/${playerId}/bids`);
-        
+
         document.getElementById('bidPlayerInfo').innerHTML = `
             <h3>${player.name}</h3>
             <p><strong>Role:</strong> ${player.role}</p>
             <p><strong>Country:</strong> ${player.country}</p>
             <p><strong>Base Price:</strong> ₹${player.basePrice.toLocaleString()}</p>
         `;
-        
+
         document.getElementById('currentBid').textContent = player.currentBid.toLocaleString();
-        document.getElementById('bidAmount').value = player.currentBid + 10000;
-        document.getElementById('bidAmount').min = player.currentBid + 10000;
-        
+
+        // Set default bid to current + 10k, but allow any amount > current
+        const defaultBid = player.currentBid + 10000;
+        document.getElementById('bidAmount').value = defaultBid;
+        document.getElementById('bidAmount').min = player.currentBid + 1;
+
+        // Store current bid for calculation
+        document.getElementById('bidAmount').dataset.currentBid = player.currentBid;
+
         // Display bid history
         const bidHistory = document.getElementById('bidHistory');
         if (bids.length > 0) {
@@ -276,7 +282,7 @@ async function openBidModal(playerId) {
         } else {
             bidHistory.innerHTML = '<p>No bids yet.</p>';
         }
-        
+
         modal.style.display = 'block';
     } catch (error) {
         alert(error.message);
@@ -290,6 +296,18 @@ setInterval(() => {
         loadUserDashboard();
     }
 }, 10000); // Refresh every 10 seconds
+
+// Increase bid amount
+function increaseBid(amount) {
+    const bidInput = document.getElementById('bidAmount');
+    const currentBid = parseInt(bidInput.dataset.currentBid || 0);
+    const currentInput = parseInt(bidInput.value || currentBid);
+
+    // If input is less than current bid, start from current bid
+    const baseAmount = currentInput < currentBid ? currentBid : currentInput;
+
+    bidInput.value = baseAmount + amount;
+}
 
 // Initialize when page loads
 if (document.readyState === 'loading') {

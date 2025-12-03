@@ -132,12 +132,12 @@ app.post('/api/register', (req, res) => {
   // Validate role
   const validRoles = ['admin', 'bidder', 'user'];
   let userRole = role || 'bidder';
-  
+
   // Map 'bidder' to 'user' for backward compatibility
   if (userRole === 'bidder') {
     userRole = 'user';
   }
-  
+
   if (!validRoles.includes(userRole)) {
     return res.status(400).json({ error: 'Invalid role. Must be admin or bidder' });
   }
@@ -222,6 +222,61 @@ app.get('/api/teams', authenticateToken, (req, res) => {
   res.json(teams);
 });
 
+// Admin: Update team
+app.put('/api/admin/teams/:id', authenticateToken, requireAdmin, (req, res) => {
+  const { name, budget } = req.body;
+  const teams = readJSON(TEAMS_FILE);
+
+  const teamIndex = teams.findIndex(t => t.id === parseInt(req.params.id));
+  if (teamIndex === -1) {
+    return res.status(404).json({ error: 'Team not found' });
+  }
+
+  const team = teams[teamIndex];
+
+  // Update team details
+  teams[teamIndex].name = name || team.name;
+
+  // If budget is being updated, adjust remaining budget proportionally
+  if (budget && budget !== team.budget) {
+    const budgetDifference = budget - team.budget;
+    teams[teamIndex].budget = budget;
+    teams[teamIndex].remainingBudget = team.remainingBudget + budgetDifference;
+
+    // Ensure remaining budget doesn't go negative
+    if (teams[teamIndex].remainingBudget < 0) {
+      return res.status(400).json({ error: 'New budget is too low for current spending' });
+    }
+  }
+
+  writeJSON(TEAMS_FILE, teams);
+
+  res.json(teams[teamIndex]);
+});
+
+// Admin: Delete team
+app.delete('/api/admin/teams/:id', authenticateToken, requireAdmin, (req, res) => {
+  const teams = readJSON(TEAMS_FILE);
+
+  const teamIndex = teams.findIndex(t => t.id === parseInt(req.params.id));
+  if (teamIndex === -1) {
+    return res.status(404).json({ error: 'Team not found' });
+  }
+
+  const team = teams[teamIndex];
+
+  // Prevent deletion if team has players
+  if (team.players && team.players.length > 0) {
+    return res.status(400).json({ error: 'Cannot delete a team with players' });
+  }
+
+  // Remove team
+  teams.splice(teamIndex, 1);
+  writeJSON(TEAMS_FILE, teams);
+
+  res.json({ success: true, message: 'Team deleted successfully' });
+});
+
 // Admin: Add player
 app.post('/api/admin/players', authenticateToken, requireAdmin, (req, res) => {
   const { name, role, basePrice, country } = req.body;
@@ -285,7 +340,7 @@ app.put('/api/admin/players/:id', authenticateToken, requireAdmin, (req, res) =>
   players[playerIndex].role = role || player.role;
   players[playerIndex].basePrice = basePrice || player.basePrice;
   players[playerIndex].country = country || player.country;
-  
+
   // Update current bid if base price changed and no bids placed yet
   if (basePrice && !player.currentBidder) {
     players[playerIndex].currentBid = basePrice;

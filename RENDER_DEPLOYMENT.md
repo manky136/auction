@@ -65,6 +65,46 @@ Required:
 Optional:
 - `PORT`: Automatically set by Render (you don't need to set this)
 
+## Persistent Data Storage
+
+**IMPORTANT**: To prevent data loss on Render, you need to configure a persistent disk:
+
+### If Using render.yaml (Automatic)
+The `render.yaml` file already includes persistent disk configuration:
+```yaml
+disk:
+  name: auction-data
+  mountPath: /opt/render/project/src/data
+  sizeGB: 1
+```
+
+This ensures your data persists across deployments and service restarts.
+
+### If Configuring Manually via Dashboard
+
+1. Go to your service in Render Dashboard
+2. Click on "Disks" in the left sidebar
+3. Click "Add Disk"
+4. Configure:
+   - **Name**: `auction-data`
+   - **Mount Path**: `/opt/render/project/src/data`
+   - **Size**: 1 GB (free tier allows up to 1GB)
+5. Click "Save"
+6. **Important**: Render will restart your service to mount the disk
+
+### How It Works
+- The `data/` directory is mounted to a persistent disk
+- Data survives service restarts and redeployments
+- Free tier includes 1GB of persistent storage
+- Data is automatically backed up by Render
+
+### Verifying Persistent Storage
+After adding the disk:
+1. Add some teams/players via the admin dashboard
+2. Trigger a manual redeploy in Render
+3. Check if your data is still there after deployment completes
+
+
 ## Custom Domain (Optional)
 
 1. Go to your service settings

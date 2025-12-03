@@ -13,4 +13,9 @@ services:
         generateValue: true
     # Health check path
     healthCheckPath: /
+    # Persistent disk for data storage
+    disk:
+      name: auction-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
 

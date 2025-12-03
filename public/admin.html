@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Cricket Auction</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-container">
@@ -78,6 +80,26 @@
         </div>
     </div>
 
+    <!-- Edit Team Modal -->
+    <div id="editTeamModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditTeamModal()">&times;</span>
+            <h2>Edit Team</h2>
+            <form id="editTeamForm">
+                <input type="hidden" id="editTeamId">
+                <div class="form-group">
+                    <label for="editTeamName">Team Name</label>
+                    <input type="text" id="editTeamName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTeamBudget">Budget (₹)</label>
+                    <input type="number" id="editTeamBudget" name="budget" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Team</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Edit Player Modal -->
     <div id="editPlayerModal" class="modal">
         <div class="modal-content">
@@ -115,5 +137,5 @@
     <script src="auth.js"></script>
     <script src="admin.js"></script>
 </body>
-</html>
 
+</html>

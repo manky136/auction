@@ -85,6 +85,29 @@ async function initAdmin() {
             showError(error.message);
         }
     });
+
+    // Edit team form
+    document.getElementById('editTeamForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const teamId = document.getElementById('editTeamId').value;
+        const formData = new FormData(e.target);
+        const teamData = {
+            name: formData.get('name'),
+            budget: parseInt(formData.get('budget'))
+        };
+
+        try {
+            await apiRequest(`/admin/teams/${teamId}`, {
+                method: 'PUT',
+                body: JSON.stringify(teamData)
+            });
+            closeEditTeamModal();
+            loadTeams();
+            showSuccess('Team updated successfully!');
+        } catch (error) {
+            showError(error.message);
+        }
+    });
 }
 
 // Load teams
@@ -107,6 +130,10 @@ async function loadTeams() {
                 <p><strong>Budget:</strong> ₹${team.budget.toLocaleString()}</p>
                 <p><strong>Remaining:</strong> ₹${team.remainingBudget.toLocaleString()}</p>
                 <p><strong>Players:</strong> ${team.players.length}</p>
+                <div class="player-actions">
+                    <button class="btn btn-edit" onclick="editTeam(${team.id})">Edit</button>
+                    <button class="btn btn-danger" onclick="removeTeam(${team.id})">Remove</button>
+                </div>
             `;
             teamsList.appendChild(teamCard);
         });
@@ -233,6 +260,51 @@ async function removePlayer(playerId) {
 // Close edit modal
 function closeEditModal() {
     document.getElementById('editPlayerModal').style.display = 'none';
+}
+
+// Edit team
+async function editTeam(teamId) {
+    try {
+        const teams = await apiRequest('/teams');
+        const team = teams.find(t => t.id === teamId);
+
+        if (!team) {
+            showError('Team not found');
+            return;
+        }
+
+        // Populate form
+        document.getElementById('editTeamId').value = team.id;
+        document.getElementById('editTeamName').value = team.name;
+        document.getElementById('editTeamBudget').value = team.budget;
+
+        // Show modal
+        document.getElementById('editTeamModal').style.display = 'flex';
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+// Remove team
+async function removeTeam(teamId) {
+    if (!confirm('Are you sure you want to remove this team?')) {
+        return;
+    }
+
+    try {
+        await apiRequest(`/admin/teams/${teamId}`, {
+            method: 'DELETE'
+        });
+        loadTeams();
+        showSuccess('Team removed successfully!');
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+// Close edit team modal
+function closeEditTeamModal() {
+    document.getElementById('editTeamModal').style.display = 'none';
 }
 
 // Show success message

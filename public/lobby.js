@@ -10,8 +10,10 @@ async function initLobby() {
         document.getElementById('adminSection').style.display = 'block';
         loadMyAuctions();
     } else {
-        document.getElementById('bidderSection').style.display = 'block';
+        document.getElementById('userSection').style.display = 'block';
     }
+
+    hideLoader();
 
     // Create Auction (Admin)
     const createForm = document.getElementById('createAuctionForm');

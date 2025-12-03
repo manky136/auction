@@ -78,6 +78,39 @@
         </div>
     </div>
 
+    <!-- Edit Player Modal -->
+    <div id="editPlayerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Player</h2>
+            <form id="editPlayerForm">
+                <input type="hidden" id="editPlayerId">
+                <div class="form-group">
+                    <label for="editPlayerName">Player Name</label>
+                    <input type="text" id="editPlayerName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPlayerRole">Role</label>
+                    <select id="editPlayerRole" name="role" required>
+                        <option value="Batsman">Batsman</option>
+                        <option value="Bowler">Bowler</option>
+                        <option value="All-rounder">All-rounder</option>
+                        <option value="Wicket-keeper">Wicket-keeper</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editBasePrice">Base Price (₹)</label>
+                    <input type="number" id="editBasePrice" name="basePrice" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCountry">Country</label>
+                    <input type="text" id="editCountry" name="country" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Player</button>
+            </form>
+        </div>
+    </div>
+
     <script src="config.js"></script>
     <script src="auth.js"></script>
     <script src="admin.js"></script>

@@ -264,6 +264,60 @@ app.get('/api/players/:id', authenticateToken, (req, res) => {
   res.json(player);
 });
 
+// Admin: Update player
+app.put('/api/admin/players/:id', authenticateToken, requireAdmin, (req, res) => {
+  const { name, role, basePrice, country } = req.body;
+  const players = readJSON(PLAYERS_FILE);
+
+  const playerIndex = players.findIndex(p => p.id === parseInt(req.params.id));
+  if (playerIndex === -1) {
+    return res.status(404).json({ error: 'Player not found' });
+  }
+
+  const player = players[playerIndex];
+
+  if (player.sold) {
+    return res.status(400).json({ error: 'Cannot edit a sold player' });
+  }
+
+  // Update player details
+  players[playerIndex].name = name || player.name;
+  players[playerIndex].role = role || player.role;
+  players[playerIndex].basePrice = basePrice || player.basePrice;
+  players[playerIndex].country = country || player.country;
+  
+  // Update current bid if base price changed and no bids placed yet
+  if (basePrice && !player.currentBidder) {
+    players[playerIndex].currentBid = basePrice;
+  }
+
+  writeJSON(PLAYERS_FILE, players);
+
+  res.json(players[playerIndex]);
+});
+
+// Admin: Delete player
+app.delete('/api/admin/players/:id', authenticateToken, requireAdmin, (req, res) => {
+  const players = readJSON(PLAYERS_FILE);
+
+  const playerIndex = players.findIndex(p => p.id === parseInt(req.params.id));
+  if (playerIndex === -1) {
+    return res.status(404).json({ error: 'Player not found' });
+  }
+
+  const player = players[playerIndex];
+
+  if (player.sold) {
+    return res.status(400).json({ error: 'Cannot delete a sold player' });
+  }
+
+  // Remove player
+  players.splice(playerIndex, 1);
+  writeJSON(PLAYERS_FILE, players);
+
+  res.json({ success: true, message: 'Player deleted successfully' });
+});
+
 // Place bid
 app.post('/api/players/:id/bid', authenticateToken, (req, res) => {
   const { amount } = req.body;

@@ -3,7 +3,7 @@
 // Initialize admin dashboard
 async function initAdmin() {
     if (!checkAuth()) return;
-    
+
     const user = getUser();
     if (user.role !== 'admin') {
         alert('Access denied. Admin only.');
@@ -60,6 +60,31 @@ async function initAdmin() {
             showError(error.message);
         }
     });
+
+    // Edit player form
+    document.getElementById('editPlayerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const playerId = document.getElementById('editPlayerId').value;
+        const formData = new FormData(e.target);
+        const playerData = {
+            name: formData.get('name'),
+            role: formData.get('role'),
+            basePrice: parseInt(formData.get('basePrice')),
+            country: formData.get('country')
+        };
+
+        try {
+            await apiRequest(`/admin/players/${playerId}`, {
+                method: 'PUT',
+                body: JSON.stringify(playerData)
+            });
+            closeEditModal();
+            loadPlayers();
+            showSuccess('Player updated successfully!');
+        } catch (error) {
+            showError(error.message);
+        }
+    });
 }
 
 // Load teams
@@ -105,7 +130,7 @@ async function loadPlayers() {
         players.forEach(player => {
             const playerCard = document.createElement('div');
             playerCard.className = `player-card ${player.sold ? 'sold' : ''}`;
-            
+
             if (player.sold) {
                 playerCard.innerHTML = `
                     <h3>${player.name}</h3>
@@ -136,10 +161,14 @@ async function loadPlayers() {
                         <div class="amount">₹${player.currentBid.toLocaleString()}</div>
                         ${player.currentBidder ? `<div class="current-bidder">Current Bidder: ${player.currentBidder}</div>` : '<div class="current-bidder">No bids yet</div>'}
                     </div>
-                    <button class="btn btn-success" onclick="sellPlayer(${player.id})">Sell Player</button>
+                    <div class="player-actions">
+                        <button class="btn btn-edit" onclick="editPlayer(${player.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="removePlayer(${player.id})">Remove</button>
+                        <button class="btn btn-success" onclick="sellPlayer(${player.id})">Sell Player</button>
+                    </div>
                 `;
             }
-            
+
             playersList.appendChild(playerCard);
         });
     } catch (error) {
@@ -163,6 +192,47 @@ async function sellPlayer(playerId) {
     } catch (error) {
         showError(error.message);
     }
+}
+
+// Edit player
+async function editPlayer(playerId) {
+    try {
+        const player = await apiRequest(`/players/${playerId}`);
+
+        // Populate form
+        document.getElementById('editPlayerId').value = player.id;
+        document.getElementById('editPlayerName').value = player.name;
+        document.getElementById('editPlayerRole').value = player.role;
+        document.getElementById('editBasePrice').value = player.basePrice;
+        document.getElementById('editCountry').value = player.country;
+
+        // Show modal
+        document.getElementById('editPlayerModal').style.display = 'flex';
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+// Remove player
+async function removePlayer(playerId) {
+    if (!confirm('Are you sure you want to remove this player from the auction?')) {
+        return;
+    }
+
+    try {
+        await apiRequest(`/admin/players/${playerId}`, {
+            method: 'DELETE'
+        });
+        loadPlayers();
+        showSuccess('Player removed successfully!');
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+// Close edit modal
+function closeEditModal() {
+    document.getElementById('editPlayerModal').style.display = 'none';
 }
 
 // Show success message

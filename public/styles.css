@@ -569,6 +569,267 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* Admin Dashboard & User Dashboard */
+.navbar {
+    background: var(--dark);
+    color: white;
+    padding: 20px 0;
+    box-shadow: var(--shadow-md);
+}
+
+.navbar h1 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.team-badge {
+    background: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.btn-secondary {
+    background: var(--gray);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #475569;
+}
+
+.dashboard {
+    padding: 40px 0;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 30px;
+}
+
+.card h2 {
+    margin-bottom: 24px;
+    color: var(--dark);
+    font-size: 24px;
+}
+
+/* Player and Team Grids */
+.players-grid,
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.player-card,
+.team-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.player-card:hover,
+.team-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+}
+
+.player-card h3,
+.team-card h3 {
+    margin-bottom: 16px;
+    color: var(--dark);
+    font-size: 20px;
+}
+
+.player-info {
+    margin-bottom: 12px;
+    color: var(--gray);
+    font-size: 15px;
+}
+
+.player-info strong {
+    color: var(--dark);
+}
+
+.current-bid,
+.sold-info {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid #f1f5f9;
+}
+
+.current-bid .amount,
+.sold-info .amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.current-bidder {
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.player-card.sold {
+    background: #f8fafc;
+    border-color: var(--success);
+}
+
+.player-card.sold .amount {
+    color: var(--success);
+}
+
+/* Player Actions */
+.player-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.player-actions .btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+.btn-edit {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #7c3aed;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-bid {
+    background: var(--secondary);
+    color: white;
+    margin-top: 16px;
+}
+
+.btn-bid:hover {
+    background: #db2777;
+}
+
+/* Team Info */
+.team-info-item {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.team-players-list {
+    margin-top: 12px;
+    padding-left: 12px;
+}
+
+.team-player {
+    padding: 12px;
+    background: white;
+    border-left: 3px solid var(--primary);
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+/* Bid History */
+.bid-history {
+    margin-top: 20px;
+}
+
+.bid-history h4 {
+    margin-bottom: 12px;
+    color: var(--dark);
+}
+
+.bid-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.bid-team {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.bid-amount {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Success Message */
+.success-message {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    background: var(--success);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all 0.3s ease;
+    z-index: 3000;
+}
+
+.success-message.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Modal Display Fix */
+.modal {
+    display: none;
+}
+
+.modal[style*="display: flex"],
+.modal[style*="display: block"] {
+    display: flex !important;
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
     .hero-title {

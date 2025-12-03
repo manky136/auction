@@ -74,13 +74,9 @@ if (document.getElementById('loginForm')) {
             });
 
             setToken(data.token);
-            
-            // Redirect based on role
-            if (data.user.role === 'admin') {
-                window.location.href = 'admin.html';
-            } else {
-                window.location.href = 'user.html';
-            }
+
+            // Redirect to lobby
+            window.location.href = 'lobby.html';
         } catch (error) {
             errorDiv.textContent = error.message;
             errorDiv.classList.add('show');
@@ -114,13 +110,9 @@ if (document.getElementById('registerForm')) {
             });
 
             setToken(data.token);
-            
-            // Redirect based on role
-            if (data.user.role === 'admin') {
-                window.location.href = 'admin.html';
-            } else {
-                window.location.href = 'user.html';
-            }
+
+            // Redirect to lobby
+            window.location.href = 'lobby.html';
         } catch (error) {
             errorDiv.textContent = error.message;
             errorDiv.classList.add('show');

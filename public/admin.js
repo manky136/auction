@@ -1,5 +1,7 @@
 // Admin dashboard functionality
 
+let currentAuction = null;
+
 // Initialize admin dashboard
 async function initAdmin() {
     if (!checkAuth()) return;
@@ -7,9 +9,18 @@ async function initAdmin() {
     const user = getUser();
     if (user.role !== 'admin') {
         alert('Access denied. Admin only.');
-        window.location.href = 'index.html';
+        window.location.href = 'lobby.html';
         return;
     }
+
+    // Get current auction context
+    const auctionData = localStorage.getItem('currentAuction');
+    if (!auctionData) {
+        window.location.href = 'lobby.html';
+        return;
+    }
+    currentAuction = JSON.parse(auctionData);
+    document.getElementById('auctionTitle').textContent = `🏏 ${currentAuction.name} (Code: ${currentAuction.code})`;
 
     displayUserInfo();
     loadTeams();
@@ -21,7 +32,8 @@ async function initAdmin() {
         const formData = new FormData(e.target);
         const teamData = {
             name: formData.get('name'),
-            budget: parseInt(formData.get('budget'))
+            budget: parseInt(formData.get('budget')),
+            auctionId: currentAuction.id
         };
 
         try {
@@ -45,7 +57,9 @@ async function initAdmin() {
             name: formData.get('name'),
             role: formData.get('role'),
             basePrice: parseInt(formData.get('basePrice')),
-            country: formData.get('country')
+            country: formData.get('country'),
+            imageUrl: formData.get('imageUrl'),
+            auctionId: currentAuction.id
         };
 
         try {
@@ -70,7 +84,8 @@ async function initAdmin() {
             name: formData.get('name'),
             role: formData.get('role'),
             basePrice: parseInt(formData.get('basePrice')),
-            country: formData.get('country')
+            country: formData.get('country'),
+            imageUrl: formData.get('imageUrl')
         };
 
         try {
@@ -113,7 +128,7 @@ async function initAdmin() {
 // Load teams
 async function loadTeams() {
     try {
-        const teams = await apiRequest('/teams');
+        const teams = await apiRequest(`/teams?auctionId=${currentAuction.id}`);
         const teamsList = document.getElementById('teamsList');
         teamsList.innerHTML = '';
 
@@ -145,7 +160,7 @@ async function loadTeams() {
 // Load players
 async function loadPlayers() {
     try {
-        const players = await apiRequest('/players');
+        const players = await apiRequest(`/players?auctionId=${currentAuction.id}`);
         const playersList = document.getElementById('playersList');
         playersList.innerHTML = '';
 
@@ -158,8 +173,11 @@ async function loadPlayers() {
             const playerCard = document.createElement('div');
             playerCard.className = `player-card ${player.sold ? 'sold' : ''}`;
 
+            let imageHtml = player.imageUrl ? `<img src="${player.imageUrl}" alt="${player.name}" class="player-image">` : '';
+
             if (player.sold) {
                 playerCard.innerHTML = `
+                    ${imageHtml}
                     <h3>${player.name}</h3>
                     <div class="player-info">
                         <strong>Role:</strong> ${player.role}
@@ -174,6 +192,7 @@ async function loadPlayers() {
                 `;
             } else {
                 playerCard.innerHTML = `
+                    ${imageHtml}
                     <h3>${player.name}</h3>
                     <div class="player-info">
                         <strong>Role:</strong> ${player.role}
@@ -200,6 +219,24 @@ async function loadPlayers() {
         });
     } catch (error) {
         console.error('Error loading players:', error);
+    }
+}
+
+// Restart Auction
+async function restartAuction() {
+    if (!confirm('WARNING: This will reset all bids, team budgets, and player statuses for THIS auction. This cannot be undone. Are you sure?')) {
+        return;
+    }
+
+    try {
+        await apiRequest(`/auctions/${currentAuction.id}/restart`, {
+            method: 'POST'
+        });
+        loadTeams();
+        loadPlayers();
+        showSuccess('Auction restarted successfully!');
+    } catch (error) {
+        showError(error.message);
     }
 }
 
@@ -232,6 +269,7 @@ async function editPlayer(playerId) {
         document.getElementById('editPlayerRole').value = player.role;
         document.getElementById('editBasePrice').value = player.basePrice;
         document.getElementById('editCountry').value = player.country;
+        document.getElementById('editPlayerImage').value = player.imageUrl || '';
 
         // Show modal
         document.getElementById('editPlayerModal').style.display = 'flex';
@@ -265,7 +303,7 @@ function closeEditModal() {
 // Edit team
 async function editTeam(teamId) {
     try {
-        const teams = await apiRequest('/teams');
+        const teams = await apiRequest(`/teams?auctionId=${currentAuction.id}`);
         const team = teams.find(t => t.id === teamId);
 
         if (!team) {

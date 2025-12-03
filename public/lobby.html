@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auction Lobby - Cricket Auction</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>🏏 Cricket Auction Lobby</h1>
+            <div class="nav-links">
+                <span id="usernameDisplay"></span>
+                <button onclick="logout()" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard">
+            <!-- Admin Section: Create Auction -->
+            <section id="adminSection" class="card" style="display: none;">
+                <h2>Create New Auction</h2>
+                <form id="createAuctionForm">
+                    <div class="form-group">
+                        <label for="auctionName">Auction Name</label>
+                        <input type="text" id="auctionName" name="name" placeholder="e.g. IPL 2025" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Auction</button>
+                </form>
+
+                <h3 style="margin-top: 2rem;">My Auctions</h3>
+                <div id="myAuctionsList" class="teams-grid"></div>
+            </section>
+
+            <!-- Bidder Section: Join Auction -->
+            <section id="bidderSection" class="card" style="display: none;">
+                <h2>Join Auction</h2>
+                <form id="joinAuctionForm">
+                    <div class="form-group">
+                        <label for="auctionCode">Auction Code</label>
+                        <input type="text" id="auctionCode" name="code" placeholder="Enter 6-character code"
+                            maxlength="6" required
+                            style="text-transform: uppercase; letter-spacing: 2px; font-size: 1.2rem; text-align: center;">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Join Auction</button>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="lobby.js"></script>
+</body>
+
+</html>

@@ -2,7 +2,7 @@ const API_URL = typeof CONFIG !== 'undefined' ? CONFIG.API_URL : 'http://localho
 
 // Login
 async function login(username, password) {
-    const response = await fetch(`${API_URL}/auth/login`, {
+    const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -21,7 +21,7 @@ async function login(username, password) {
 
 // Register
 async function register(username, password, role, teamName) {
-    const response = await fetch(`${API_URL}/auth/register`, {
+    const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, role, teamName })

@@ -131,7 +131,7 @@ function logout() {
 function checkAuth() {
     const token = getToken();
     if (!token) {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return false;
     }
     return true;

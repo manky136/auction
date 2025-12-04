@@ -7,279 +7,61 @@
     <title>User Dashboard - Cricket Auction</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Enhanced User Dashboard Styles */
+        /* Clean White Theme */
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: #f8f9fa;
         }
 
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .team-badge {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: 700;
-            font-size: 14px;
-            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.05);
-            }
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .card {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+            border: 1px solid #e0e0e0;
         }
 
         .card h2 {
-            color: #667eea;
-            font-size: 28px;
-            margin-bottom: 24px;
-            position: relative;
-            padding-bottom: 12px;
+            color: #1a1a1a;
         }
 
-        .card h2::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 60px;
-            height: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 2px;
+        /* Make ALL text dark and readable */
+        input,
+        select,
+        textarea {
+            color: #1a1a1a !important;
+            background: white !important;
+            border: 1px solid #d0d0d0 !important;
+            font-weight: 500 !important;
         }
 
-        .player-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-            border: 2px solid #e8ecf7;
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #3b82f6 !important;
+            outline: 2px solid rgba(59, 130, 246, 0.2) !important;
         }
 
-        .player-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-        }
-
-        .player-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .player-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.25);
-            border-color: #667eea;
-        }
-
-        .player-card h3 {
-            color: #2d3748;
-            font-size: 22px;
-            margin-bottom: 16px;
-            font-weight: 700;
-        }
-
-        .player-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .current-bid {
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-            padding: 16px;
-            border-radius: 12px;
-            margin-top: 16px;
-        }
-
-        .current-bid .amount {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .btn-bid {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            margin-top: 16px;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .btn-bid:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
-        }
-
-        .team-info-item {
-            background: linear-gradient(135deg, #f8f9ff 0%, #e8ecf7 100%);
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            border-left: 4px solid #667eea;
-        }
-
-        .team-info-item strong {
-            color: #667eea;
-            font-weight: 700;
-        }
-
+        .player-card,
         .team-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
-            border: 2px solid #e8ecf7;
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s ease;
-        }
-
-        .team-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-            cursor: pointer;
-        }
-
-        .team-card h3,
-        .team-card h4 {
-            color: #667eea;
-            font-weight: 700;
-        }
-
-        .sold-info {
-            background: linear-gradient(135deg, #10b98115 0%, #10b98125 100%);
-            padding: 16px;
-            border-radius: 12px;
-            margin-top: 16px;
-        }
-
-        .sold-info .amount {
-            font-size: 28px;
-            font-weight: 800;
-            color: #10b981;
-        }
-
-        .player-card.sold {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border-color: #10b981;
-        }
-
-        /* Modal Enhancements */
-        .modal-content {
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(102, 126, 234, 0.25);
-        }
-
-        .modal-content h2 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .quick-bids {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-
-        .quick-bids .btn {
-            flex: 1;
-            min-width: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-weight: 600;
-            padding: 8px 12px;
-            font-size: 14px;
-        }
-
-        .quick-bids .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .bid-history h4 {
-            color: #667eea;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-
-        .bid-item {
-            background: linear-gradient(135deg, #f8f9ff 0%, #e8ecf7 100%);
-            border-left: 3px solid #667eea;
-        }
-
-        /* Loading Animation */
-        .loader-overlay {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .cricket-ball {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
             background: white;
-            position: relative;
-            animation: bounce 1s ease-in-out infinite;
+            border: 1px solid #e0e0e0;
         }
 
-        @keyframes bounce {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-20px);
-            }
+        .player-card h3,
+        .team-card h3 {
+            color: #1a1a1a !important;
         }
 
-        .loader-text {
-            color: white;
-            font-size: 18px;
-            font-weight: 600;
-            margin-top: 20px;
+        .player-info,
+        .player-info strong {
+            color: #1a1a1a !important;
+        }
+
+        label {
+            color: #1a1a1a !important;
+            font-weight: 600 !important;
         }
     </style>
 </head>

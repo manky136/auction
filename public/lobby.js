@@ -63,7 +63,7 @@ async function initLobby() {
 async function loadMyAuctions() {
     try {
         const auctions = await apiRequest('/admin/auctions');
-        const list = document.getElementById('myAuctionsList');
+        const list = document.getElementById('adminAuctionsList');
         list.innerHTML = '';
 
         if (auctions.length === 0) {

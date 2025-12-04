@@ -4,9 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricket Auction System - Home</title>
+    <title>Cricket Auction System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
+        /* Modern Professional Home Page Styles */
+        :root {
+            --primary-color: #1e3a8a;
+            /* Deep Royal Blue */
+            --accent-color: #059669;
+            /* Cricket Green */
+            --text-light: #f8fafc;
+            --text-dark: #1e293b;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+        }
+
+        /* Hero Section */
         .hero-section {
             position: relative;
             height: 100vh;
@@ -14,206 +37,183 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
         }
 
-        .hero-background {
+        .hero-bg {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            opacity: 0.3;
             z-index: 0;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.7));
+            z-index: 1;
         }
 
         .hero-content {
             position: relative;
-            z-index: 1;
-            text-align: center;
-            color: white;
+            z-index: 2;
+            max-width: 1000px;
             padding: 2rem;
-            max-width: 800px;
+            text-align: center;
         }
 
         .hero-title {
-            font-size: 4rem;
+            font-size: 4.5rem;
             font-weight: 800;
-            margin-bottom: 1rem;
-            text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.9);
-            color: #ffffff;
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from {
-                text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 212, 255, 0.6);
-            }
-
-            to {
-                text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 255, 136, 0.8);
-            }
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         .hero-subtitle {
             font-size: 1.5rem;
-            margin-bottom: 2rem;
-            color: #ffffff;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+            color: #cbd5e1;
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
         }
 
-        .hero-buttons {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .hero-btn {
-            padding: 1rem 2.5rem;
+        .btn-hero {
+            padding: 1rem 3rem;
             font-size: 1.2rem;
             font-weight: 600;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 8px;
             text-decoration: none;
+            transition: all 0.3s ease;
             display: inline-block;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
-        .hero-btn-primary {
-            background: linear-gradient(135deg, #00d4ff, #00ff88);
-            color: #1a1a2e;
+        .btn-primary-hero {
+            background-color: var(--accent-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);
+            border: 2px solid transparent;
         }
 
-        .hero-btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        .btn-primary-hero:hover {
+            background-color: #047857;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(5, 150, 105, 0.4);
         }
 
-        .hero-btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
+        .btn-secondary-hero {
+            background-color: transparent;
             color: white;
             border: 2px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
+            margin-left: 1rem;
         }
 
-        .hero-btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-3px);
+        .btn-secondary-hero:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: white;
         }
 
+        /* Features Section */
         .features-section {
-            padding: 4rem 2rem;
-            background: linear-gradient(180deg, #16213e 0%, #1a1a2e 100%);
+            padding: 6rem 2rem;
+            background-color: white;
         }
 
-        .features-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .features-title {
+        .section-header {
             text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
             font-size: 2.5rem;
-            color: #ffffff;
-            margin-bottom: 3rem;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: #64748b;
+            font-size: 1.2rem;
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .feature-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e2e8f0;
         }
 
         .feature-card:hover {
             transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(0, 212, 255, 0.5);
-            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
 
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+        .feature-img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .feature-content {
+            padding: 2rem;
         }
 
         .feature-title {
             font-size: 1.5rem;
-            color: #00d4ff;
-            margin-bottom: 0.5rem;
             font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
         }
 
-        .feature-description {
-            color: #e0e0e0;
+        .feature-desc {
+            color: #64748b;
             line-height: 1.6;
         }
 
-        .cricket-action-section {
-            position: relative;
-            height: 400px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .cricket-action-img {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.4;
-        }
-
-        .cricket-action-overlay {
-            position: relative;
-            z-index: 1;
-            text-align: center;
+        /* Footer */
+        .footer {
+            background-color: var(--primary-color);
             color: white;
-            padding: 2rem;
+            padding: 4rem 2rem;
+            text-align: center;
         }
 
-        .cricket-action-text {
-            font-size: 2.5rem;
-            font-weight: 700;
-            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.9);
-            margin-bottom: 1.5rem;
-            color: #ffffff;
+        .footer p {
+            opacity: 0.8;
         }
 
         @media (max-width: 768px) {
             .hero-title {
-                font-size: 2.5rem;
-            }
-
-            .hero-subtitle {
-                font-size: 1.2rem;
+                font-size: 3rem;
             }
 
             .hero-buttons {
+                display: flex;
                 flex-direction: column;
-                align-items: center;
+                gap: 1rem;
             }
 
-            .hero-btn {
-                width: 100%;
-                max-width: 300px;
+            .btn-secondary-hero {
+                margin-left: 0;
             }
         }
     </style>
@@ -222,65 +222,94 @@
 <body>
     <!-- Hero Section -->
     <section class="hero-section">
-        <img src="images/hero-stadium.jpg" alt="Cricket Stadium" class="hero-background">
+        <div class="hero-overlay"></div>
+        <img src="images/hero-stadium.jpg" alt="Cricket Stadium" class="hero-bg">
+
         <div class="hero-content">
-            <h1 class="hero-title">🏏 Cricket Auction</h1>
-            <p class="hero-subtitle">Build Your Dream Team. Bid Smart. Win Big.</p>
+            <h1 class="hero-title">Professional Cricket<br>Auction Platform</h1>
+            <p class="hero-subtitle">
+                The most advanced system for managing cricket auctions.
+                Real-time bidding, squad management, and powerful analytics in one place.
+            </p>
             <div class="hero-buttons">
-                <a href="login.html" class="hero-btn hero-btn-primary">Get Started</a>
-                <a href="#features" class="hero-btn hero-btn-secondary">Learn More</a>
+                <a href="login.html" class="btn-hero btn-primary-hero">Start Auction</a>
+                <a href="#features" class="btn-hero btn-secondary-hero">Learn More</a>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
     <section id="features" class="features-section">
-        <div class="features-container">
-            <h2 class="features-title">Why Choose Our Auction System?</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">Real-Time Bidding</h3>
-                    <p class="feature-description">Place bids instantly and see live updates as the auction progresses
+        <div class="section-header">
+            <h2 class="section-title">Powerful Features</h2>
+            <p class="section-desc">Everything you need to conduct a seamless auction</p>
+        </div>
+
+        <div class="features-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card">
+                <img src="images/feature-bidding.png" alt="Real-time Bidding" class="feature-img">
+                <div class="feature-content">
+                    <h3 class="feature-title">Live Bidding Engine</h3>
+                    <p class="feature-desc">
+                        Experience zero-latency bidding with our advanced WebSocket technology.
+                        Simulate the intensity of a real auction room with instant updates.
                     </p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">👥</div>
-                    <h3 class="feature-title">Team Management</h3>
-                    <p class="feature-description">Track your budget, manage your squad, and build the perfect team</p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="feature-card">
+                <img src="images/feature-team.png" alt="Team Management" class="feature-img">
+                <div class="feature-content">
+                    <h3 class="feature-title">Squad Management</h3>
+                    <p class="feature-desc">
+                        Keep track of team budgets, player roles, and squad composition in real-time.
+                        Ensure every team meets the tournament requirements.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="feature-card">
+                <img src="images/feature-analytics.png" alt="Analytics" class="feature-img">
+                <div class="feature-content">
                     <h3 class="feature-title">Smart Analytics</h3>
-                    <p class="feature-description">View player stats, bid history, and make informed decisions</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3 class="feature-title">Secure Platform</h3>
-                    <p class="feature-description">Protected authentication and secure data management</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3 class="feature-title">Admin Dashboard</h3>
-                    <p class="feature-description">Complete control over players, teams, and auction settings</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🌐</div>
-                    <h3 class="feature-title">Multi-Auction Support</h3>
-                    <p class="feature-description">Host multiple auctions with unique codes and settings</p>
+                    <p class="feature-desc">
+                        Make informed decisions with comprehensive player statistics,
+                        historical data, and budget utilization charts.
+                    </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Cricket Action Section -->
-    <section class="cricket-action-section">
-        <img src="images/cricket-action.jpg" alt="Cricket Action" class="cricket-action-img">
-        <div class="cricket-action-overlay">
-            <p class="cricket-action-text">Experience the Thrill of Live Auctions</p>
-            <a href="login.html" class="hero-btn hero-btn-primary">Join Now</a>
-        </div>
-    </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Cricket Auction System. All rights reserved.</p>
+    </footer>
+
+    <!-- Loader -->
+    <div id="loader" class="loader-overlay">
+        <div class="cricket-ball"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Simple loader script for home page
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 500);
+                }, 800);
+            }
+        });
+    </script>
 </body>
 
 </html>

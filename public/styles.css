@@ -528,6 +528,7 @@ h6 {
     -webkit-text-fill-color: transparent;
 }
 
+
 .footer-links {
     display: flex;
     gap: 30px;
@@ -541,58 +542,6 @@ h6 {
 
 .footer-links a:hover {
     color: white;
-}
-
-.copyright {
-    text-align: center;
-    color: #64748b;
-    font-size: 14px;
-    padding-top: 30px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Animations */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Admin Dashboard & User Dashboard */
-.navbar {
-    background: var(--dark);
-    color: white;
-    padding: 20px 0;
-    box-shadow: var(--shadow-md);
-}
-
-.navbar h1 {
-    font-size: 24px;
-    margin: 0;
-}
-
-.nav-links {
-    display: flex;
-    gap: 20px;
-    align-items: center;
 }
 
 .team-badge {
@@ -1198,21 +1147,325 @@ h6 {
 }
 
 /* Auth Page Styles (for index.html simple login page) */
-.auth-container { max-width: 450px; margin: 100px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: var(--shadow-lg); }
-.auth-header { text-align: center; margin-bottom: 30px; }
-.auth-header h1 { font-size: 32px; color: var(--dark); margin-bottom: 8px; }
-.auth-header p { color: var(--gray); font-size: 16px; }
-.auth-tabs { display: flex; gap: 10px; margin-bottom: 30px; background: #f1f5f9; padding: 5px; border-radius: 12px; }
-.auth-tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; color: var(--gray); }
-.auth-tab.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); }
-.auth-form { display: none; }
-.auth-form.active { display: block; }
-.btn-block { width: 100%; }
+.auth-container {
+    max-width: 450px;
+    margin: 100px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header h1 {
+    font-size: 32px;
+    color: var(--dark);
+    margin-bottom: 8px;
+}
+
+.auth-header p {
+    color: var(--gray);
+    font-size: 16px;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    background: #f1f5f9;
+    padding: 5px;
+    border-radius: 12px;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    color: var(--gray);
+}
+
+.auth-tab.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.btn-block {
+    width: 100%;
+}
 
 /* Loader Overlay */
-.loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; }
-.cricket-ball { width: 80px; height: 80px; border-radius: 50%; background: #E63946; position: relative; animation: bounce 1s infinite; box-shadow: 0 10px 30px rgba(230, 57, 70, 0.3); }
-.cricket-ball::before, .cricket-ball::after { content: ''; position: absolute; height: 2px; background: white; width: 100%; top: 50%; transform: translateY(-50%); }
-.cricket-ball::after { transform: translateY(-50%) rotate(20deg); }
-.loader-text { margin-top: 20px; color: white; font-size: 18px; font-weight: 600; }
-@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+.loader-overlay {
+    :root {
+        --primary-color: #8ab4f8;
+        --secondary-color: #a8fab4;
+        --success-color: #81c995;
+        --danger-color: #f28b82;
+        --background-color: #202124;
+        --card-bg: #292a2d;
+        --text-color: #e8eaed;
+        --border-color: #3c4043;
+        --shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    body {
+        color: var(--text-color);
+        background-color: var(--background-color);
+    }
+
+    .navbar {
+        background-color: #292a2d;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .card,
+    .modal-content {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+    }
+
+    input,
+    select {
+        background-color: #3c4043;
+        color: var(--text-color);
+        border-color: #5f6368;
+    }
+
+    .team-card,
+    .player-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+    }
+}
+
+/* UI Improvements */
+.player-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.player-image-modal {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    display: block;
+}
+
+.mini-player-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.team-player {
+    display: flex;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.badge-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.badge-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .quick-bids {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 42px;
+    }
+
+    .about-content {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        gap: 30px;
+        text-align: center;
+    }
+
+    .nav-buttons {
+        display: none;
+        /* Can be improved with mobile menu later */
+    }
+}
+
+/* Auth Page Styles (for index.html simple login page) */
+.auth-container {
+    max-width: 450px;
+    margin: 100px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header h1 {
+    font-size: 32px;
+    color: var(--dark);
+    margin-bottom: 8px;
+}
+
+.auth-header p {
+    color: var(--gray);
+    font-size: 16px;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    background: #f1f5f9;
+    padding: 5px;
+    border-radius: 12px;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    color: var(--gray);
+}
+
+.auth-tab.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* Modern Loader */
+.loader-overlay {
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+}
+
+.cricket-ball {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: #00C6FF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    background: transparent;
+    margin-bottom: 1rem;
+    box-shadow: none;
+}
+
+.cricket-ball::before,
+.cricket-ball::after {
+    display: none;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loader-text {
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
+    margin-top: 0;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}

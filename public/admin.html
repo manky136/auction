@@ -246,9 +246,47 @@
             <div id="libraryList" class="library-grid">
                 <!-- Players will be loaded here -->
             </div>
-            <div class="modal-actions" style="margin-top: 20px; text-align: right;">
+            <div class="modal-actions"
+                style="margin-top: 20px; text-align: right; display: flex; justify-content: space-between;">
+                <button onclick="openAddToLibraryModal()" class="btn btn-secondary">➕ Add New to Library</button>
                 <button onclick="importSelectedPlayers()" class="btn btn-primary">Import Selected</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Add to Library Modal -->
+    <div id="addToLibraryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddToLibraryModal()">&times;</span>
+            <h2>Add New Player to Library</h2>
+            <form id="addToLibraryForm">
+                <div class="form-group">
+                    <label for="libPlayerName">Player Name</label>
+                    <input type="text" id="libPlayerName" name="name" placeholder="e.g., MS Dhoni" required>
+                </div>
+                <div class="form-group">
+                    <label for="libPlayerRole">Role</label>
+                    <select id="libPlayerRole" name="role" required>
+                        <option value="Batsman">🏏 Batsman</option>
+                        <option value="Bowler">⚡ Bowler</option>
+                        <option value="All-rounder">🌟 All-rounder</option>
+                        <option value="Wicket-keeper">🧤 Wicket-keeper</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="libBasePrice">Base Price (₹)</label>
+                    <input type="number" id="libBasePrice" name="basePrice" value="100000" required>
+                </div>
+                <div class="form-group">
+                    <label for="libCountry">Country</label>
+                    <input type="text" id="libCountry" name="country" value="India" required>
+                </div>
+                <div class="form-group">
+                    <label for="libPlayerImage">Image URL</label>
+                    <input type="url" id="libPlayerImage" name="imageUrl" placeholder="https://example.com/photo.jpg">
+                </div>
+                <button type="submit" class="btn btn-primary">Add to Library</button>
+            </form>
         </div>
     </div>
 

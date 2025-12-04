@@ -578,6 +578,37 @@ app.get('/api/admin/library/players', authenticateToken, requireAdmin, (req, res
   })));
 });
 
+// Add player to library
+app.post('/api/admin/library/players', authenticateToken, requireAdmin, (req, res) => {
+  const { name, role, basePrice, country, imageUrl } = req.body;
+
+  if (!name || !role || !basePrice || !country) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const stmt = db.prepare(`
+    INSERT INTO library_players (name, role, base_price, country, image_url)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  const result = stmt.run(
+    name,
+    role,
+    basePrice,
+    country,
+    imageUrl || 'https://via.placeholder.com/150'
+  );
+
+  res.json({
+    id: result.lastInsertRowid,
+    name,
+    role,
+    basePrice,
+    country,
+    imageUrl
+  });
+});
+
 // Bulk import players
 app.post('/api/admin/players/bulk', authenticateToken, requireAdmin, (req, res) => {
   const { players, auctionId } = req.body;

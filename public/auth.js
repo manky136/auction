@@ -2,7 +2,7 @@ const API_URL = window.API_BASE_URL || 'http://localhost:3000/api';
 
 // Login
 async function login(username, password) {
-    const response = await fetch(`${API_URL}/login`, {
+    const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -21,7 +21,7 @@ async function login(username, password) {
 
 // Register
 async function register(username, password, role, teamName) {
-    const response = await fetch(`${API_URL}/register`, {
+    const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, role, teamName })

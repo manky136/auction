@@ -1,10 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { db, getTeamPlayers } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,61 +14,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Data storage files
-const USERS_FILE = path.join(__dirname, 'data', 'users.json');
-const PLAYERS_FILE = path.join(__dirname, 'data', 'players.json');
-const TEAMS_FILE = path.join(__dirname, 'data', 'teams.json');
-const BIDS_FILE = path.join(__dirname, 'data', 'bids.json');
-const AUCTIONS_FILE = path.join(__dirname, 'data', 'auctions.json');
-
-// Ensure data directory exists
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir);
-}
-
-// Initialize data files if they don't exist
-function initDataFiles() {
-  if (!fs.existsSync(USERS_FILE)) {
-    const adminUser = {
-      id: 1,
-      username: 'admin',
-      password: bcrypt.hashSync('admin123', 10),
-      role: 'admin',
-      team: null
-    };
-    fs.writeFileSync(USERS_FILE, JSON.stringify([adminUser], null, 2));
-  }
-  if (!fs.existsSync(PLAYERS_FILE)) {
-    fs.writeFileSync(PLAYERS_FILE, JSON.stringify([], null, 2));
-  }
-  if (!fs.existsSync(TEAMS_FILE)) {
-    fs.writeFileSync(TEAMS_FILE, JSON.stringify([], null, 2));
-  }
-  if (!fs.existsSync(BIDS_FILE)) {
-    fs.writeFileSync(BIDS_FILE, JSON.stringify([], null, 2));
-  }
-  if (!fs.existsSync(AUCTIONS_FILE)) {
-    fs.writeFileSync(AUCTIONS_FILE, JSON.stringify([], null, 2));
-  }
-}
-
-initDataFiles();
-
-// Helper functions
-function readJSON(file) {
-  try {
-    const data = fs.readFileSync(file, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
-  }
-}
-
-function writeJSON(file, data) {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
-
+// Helper function to generate auction code
 function generateAuctionCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
@@ -99,13 +44,50 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Routes
+// ===== AUTHENTICATION ROUTES =====
+
+// Register
+app.post('/api/auth/register', (req, res) => {
+  const { username, password, role, teamName } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required' });
+  }
+
+  try {
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const stmt = db.prepare(`
+      INSERT INTO users (username, password, role, team)
+      VALUES (?, ?, ?, ?)
+    `);
+
+    const result = stmt.run(
+      username,
+      hashedPassword,
+      role || 'bidder',
+      teamName || null
+    );
+
+    const token = jwt.sign(
+      { id: result.lastInsertRowid, username, role: role || 'bidder', team: teamName || null },
+      SECRET_KEY,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ token, user: { id: result.lastInsertRowid, username, role: role || 'bidder', team: teamName || null } });
+  } catch (error) {
+    if (error.message.includes('UNIQUE constraint failed')) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
 
 // Login
-app.post('/api/login', (req, res) => {
+app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
-  const users = readJSON(USERS_FILE);
-  const user = users.find(u => u.username === username);
+
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(401).json({ error: 'Invalid credentials' });
@@ -119,103 +101,54 @@ app.post('/api/login', (req, res) => {
 
   res.json({
     token,
-    user: {
-      id: user.id,
-      username: user.username,
-      role: user.role,
-      team: user.team
-    }
+    user: { id: user.id, username: user.username, role: user.role, team: user.team }
   });
 });
 
-// Register
-app.post('/api/register', (req, res) => {
-  const { username, password, role } = req.body;
-  const users = readJSON(USERS_FILE);
+// ===== AUCTION ROUTES =====
 
-  if (users.find(u => u.username === username)) {
-    return res.status(400).json({ error: 'Username already exists' });
-  }
-
-  // Validate role
-  const validRoles = ['admin', 'bidder', 'user'];
-  let userRole = role || 'bidder';
-
-  if (userRole === 'bidder') {
-    userRole = 'user';
-  }
-
-  if (!validRoles.includes(userRole)) {
-    return res.status(400).json({ error: 'Invalid role. Must be admin or bidder' });
-  }
-
-  const newUser = {
-    id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
-    username,
-    password: bcrypt.hashSync(password, 10),
-    role: userRole,
-    team: null
-  };
-
-  users.push(newUser);
-  writeJSON(USERS_FILE, users);
-
-  const token = jwt.sign(
-    { id: newUser.id, username: newUser.username, role: newUser.role, team: null },
-    SECRET_KEY,
-    { expiresIn: '24h' }
-  );
-
-  res.json({
-    token,
-    user: {
-      id: newUser.id,
-      username: newUser.username,
-      role: newUser.role,
-      team: null
-    }
-  });
-});
-
-// Get current user
-app.get('/api/me', authenticateToken, (req, res) => {
-  res.json(req.user);
-});
-
-// --- Auction Routes ---
-
-// Create Auction
+// Create Auction (Admin)
 app.post('/api/auctions', authenticateToken, requireAdmin, (req, res) => {
   const { name } = req.body;
-  const auctions = readJSON(AUCTIONS_FILE);
 
-  const newAuction = {
-    id: auctions.length > 0 ? Math.max(...auctions.map(a => a.id)) + 1 : 1,
-    code: generateAuctionCode(),
-    name: name || 'Cricket Auction',
+  if (!name) {
+    return res.status(400).json({ error: 'Auction name required' });
+  }
+
+  const code = generateAuctionCode();
+
+  const stmt = db.prepare(`
+    INSERT INTO auctions (admin_id, name, code, status)
+    VALUES (?, ?, ?, ?)
+  `);
+
+  const result = stmt.run(req.user.id, name, code, 'active');
+
+  res.json({
+    id: result.lastInsertRowid,
     adminId: req.user.id,
-    status: 'active',
-    createdAt: new Date().toISOString()
-  };
-
-  auctions.push(newAuction);
-  writeJSON(AUCTIONS_FILE, auctions);
-
-  res.json(newAuction);
+    name,
+    code,
+    status: 'active'
+  });
 });
 
 // Get My Auctions (Admin)
 app.get('/api/admin/auctions', authenticateToken, requireAdmin, (req, res) => {
-  const auctions = readJSON(AUCTIONS_FILE);
-  const myAuctions = auctions.filter(a => a.adminId === req.user.id);
-  res.json(myAuctions);
+  const auctions = db.prepare('SELECT * FROM auctions WHERE admin_id = ?').all(req.user.id);
+  res.json(auctions.map(a => ({
+    id: a.id,
+    adminId: a.admin_id,
+    name: a.name,
+    code: a.code,
+    status: a.status
+  })));
 });
 
 // Join Auction (Bidder)
 app.post('/api/auctions/join', authenticateToken, (req, res) => {
   const { code } = req.body;
-  const auctions = readJSON(AUCTIONS_FILE);
-  const auction = auctions.find(a => a.code === code.toUpperCase());
+  const auction = db.prepare('SELECT * FROM auctions WHERE code = ?').get(code.toUpperCase());
 
   if (!auction) {
     return res.status(404).json({ error: 'Invalid auction code' });
@@ -225,66 +158,53 @@ app.post('/api/auctions/join', authenticateToken, (req, res) => {
     return res.status(400).json({ error: 'Auction is not active' });
   }
 
-  res.json(auction);
+  res.json({
+    id: auction.id,
+    name: auction.name,
+    code: auction.code,
+    status: auction.status
+  });
 });
 
 // Restart Auction
 app.post('/api/auctions/:id/restart', authenticateToken, requireAdmin, (req, res) => {
   const auctionId = parseInt(req.params.id);
-  const auctions = readJSON(AUCTIONS_FILE);
-  const auction = auctions.find(a => a.id === auctionId);
+  const auction = db.prepare('SELECT * FROM auctions WHERE id = ?').get(auctionId);
 
   if (!auction) return res.status(404).json({ error: 'Auction not found' });
-  if (auction.adminId !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+  if (auction.admin_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
 
   // Reset Teams
-  const teams = readJSON(TEAMS_FILE);
-  teams.forEach(t => {
-    if (t.auctionId === auctionId) {
-      t.remainingBudget = t.budget;
-      t.players = [];
-    }
-  });
-  writeJSON(TEAMS_FILE, teams);
+  db.prepare(`
+    UPDATE teams 
+    SET remaining_budget = budget
+    WHERE auction_id = ?
+  `).run(auctionId);
 
   // Reset Players
-  const players = readJSON(PLAYERS_FILE);
-  players.forEach(p => {
-    if (p.auctionId === auctionId) {
-      p.currentBid = p.basePrice;
-      p.currentBidder = null;
-      p.sold = false;
-      p.soldTo = null;
-      p.soldPrice = null;
-    }
-  });
-  writeJSON(PLAYERS_FILE, players);
+  db.prepare(`
+    UPDATE players 
+    SET current_bid = base_price, 
+        current_bidder = NULL, 
+        sold = 0, 
+        sold_to = NULL, 
+        sold_price = NULL
+    WHERE auction_id = ?
+  `).run(auctionId);
 
   // Clear Bids
-  let bids = readJSON(BIDS_FILE);
-  bids = bids.filter(b => b.auctionId !== auctionId);
-  writeJSON(BIDS_FILE, bids);
+  db.prepare('DELETE FROM bids WHERE auction_id = ?').run(auctionId);
 
   res.json({ success: true, message: 'Auction restarted successfully' });
 });
 
-// --- Scoped Data Routes ---
+// ===== USER ROUTES =====
 
-// Update user team (Scoped to Auction?) - Actually User Team is global for now, but in a real app should be per auction.
-// For simplicity, we'll keep user-team mapping simple, but ideally users join a team within an auction.
-// Let's assume users select a team AFTER joining an auction context on frontend.
-
+// Update user team
 app.put('/api/user/team', authenticateToken, (req, res) => {
   const { team } = req.body;
-  const users = readJSON(USERS_FILE);
-  const userIndex = users.findIndex(u => u.id === req.user.id);
 
-  if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-
-  users[userIndex].team = team;
-  writeJSON(USERS_FILE, users);
+  db.prepare('UPDATE users SET team = ? WHERE id = ?').run(team, req.user.id);
 
   const updatedToken = jwt.sign(
     { id: req.user.id, username: req.user.username, role: req.user.role, team },
@@ -295,328 +215,400 @@ app.put('/api/user/team', authenticateToken, (req, res) => {
   res.json({ token: updatedToken, team });
 });
 
-// Admin: Add team (Scoped to Auction)
+// ===== TEAM ROUTES =====
+
+// Admin: Add team
 app.post('/api/admin/teams', authenticateToken, requireAdmin, (req, res) => {
   const { name, budget, auctionId } = req.body;
 
   if (!auctionId) return res.status(400).json({ error: 'Auction ID required' });
 
-  const teams = readJSON(TEAMS_FILE);
+  const stmt = db.prepare(`
+    INSERT INTO teams (auction_id, name, budget, remaining_budget)
+    VALUES (?, ?, ?, ?)
+  `);
 
-  const newTeam = {
-    id: teams.length > 0 ? Math.max(...teams.map(t => t.id)) + 1 : 1,
-    auctionId: parseInt(auctionId),
+  const result = stmt.run(auctionId, name, budget, budget);
+
+  res.json({
+    id: result.lastInsertRowid,
+    auctionId,
     name,
-    budget: budget || 10000000,
-    remainingBudget: budget || 10000000,
+    budget,
+    remainingBudget: budget,
     players: []
-  };
-
-  teams.push(newTeam);
-  writeJSON(TEAMS_FILE, teams);
-
-  res.json(newTeam);
+  });
 });
 
-// Get all teams (Scoped to Auction)
+// Get all teams
 app.get('/api/teams', authenticateToken, (req, res) => {
   const { auctionId } = req.query;
-  const teams = readJSON(TEAMS_FILE);
 
+  let teams;
   if (auctionId) {
-    res.json(teams.filter(t => t.auctionId === parseInt(auctionId)));
+    teams = db.prepare('SELECT * FROM teams WHERE auction_id = ?').all(parseInt(auctionId));
   } else {
-    res.json(teams); // Fallback for legacy or admin view
+    teams = db.prepare('SELECT * FROM teams').all();
   }
+
+  // Add players to each team
+  const teamsWithPlayers = teams.map(team => {
+    const players = db.prepare(`
+      SELECT * FROM players 
+      WHERE sold = 1 AND sold_to = ?
+    `).all(team.name);
+
+    return {
+      id: team.id,
+      auctionId: team.auction_id,
+      name: team.name,
+      budget: team.budget,
+      remainingBudget: team.remaining_budget,
+      players: players
+    };
+  });
+
+  res.json(teamsWithPlayers);
 });
 
 // Admin: Update team
 app.put('/api/admin/teams/:id', authenticateToken, requireAdmin, (req, res) => {
   const { name, budget } = req.body;
-  const teams = readJSON(TEAMS_FILE);
+  const teamId = parseInt(req.params.id);
 
-  const teamIndex = teams.findIndex(t => t.id === parseInt(req.params.id));
-  if (teamIndex === -1) {
-    return res.status(404).json({ error: 'Team not found' });
-  }
-
-  const team = teams[teamIndex];
-  teams[teamIndex].name = name || team.name;
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
+  if (!team) return res.status(404).json({ error: 'Team not found' });
 
   if (budget && budget !== team.budget) {
     const budgetDifference = budget - team.budget;
-    teams[teamIndex].budget = budget;
-    teams[teamIndex].remainingBudget = team.remainingBudget + budgetDifference;
+    const newRemainingBudget = team.remaining_budget + budgetDifference;
 
-    if (teams[teamIndex].remainingBudget < 0) {
+    if (newRemainingBudget < 0) {
       return res.status(400).json({ error: 'New budget is too low for current spending' });
     }
+
+    db.prepare(`
+      UPDATE teams 
+      SET name = ?, budget = ?, remaining_budget = ?
+      WHERE id = ?
+    `).run(name || team.name, budget, newRemainingBudget, teamId);
+  } else {
+    db.prepare('UPDATE teams SET name = ? WHERE id = ?').run(name || team.name, teamId);
   }
 
-  writeJSON(TEAMS_FILE, teams);
-  res.json(teams[teamIndex]);
+  const updatedTeam = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
+  res.json({
+    id: updatedTeam.id,
+    auctionId: updatedTeam.auction_id,
+    name: updatedTeam.name,
+    budget: updatedTeam.budget,
+    remainingBudget: updatedTeam.remaining_budget,
+    players: []
+  });
 });
 
 // Admin: Delete team
 app.delete('/api/admin/teams/:id', authenticateToken, requireAdmin, (req, res) => {
-  const teams = readJSON(TEAMS_FILE);
-  const teamIndex = teams.findIndex(t => t.id === parseInt(req.params.id));
+  const teamId = parseInt(req.params.id);
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
 
-  if (teamIndex === -1) return res.status(404).json({ error: 'Team not found' });
+  if (!team) return res.status(404).json({ error: 'Team not found' });
 
-  const team = teams[teamIndex];
-  if (team.players && team.players.length > 0) {
+  // Check if team has players
+  const playerCount = db.prepare(`
+    SELECT COUNT(*) as count FROM players 
+    WHERE sold = 1 AND sold_to = ?
+  `).get(team.name);
+
+  if (playerCount.count > 0) {
     return res.status(400).json({ error: 'Cannot delete a team with players' });
   }
 
-  teams.splice(teamIndex, 1);
-  writeJSON(TEAMS_FILE, teams);
+  db.prepare('DELETE FROM teams WHERE id = ?').run(teamId);
   res.json({ success: true, message: 'Team deleted successfully' });
 });
 
-// Admin: Add player (Scoped to Auction)
+// ===== PLAYER ROUTES =====
+
+// Admin: Add player
 app.post('/api/admin/players', authenticateToken, requireAdmin, (req, res) => {
   const { name, role, basePrice, country, imageUrl, auctionId } = req.body;
 
   if (!auctionId) return res.status(400).json({ error: 'Auction ID required' });
 
-  const players = readJSON(PLAYERS_FILE);
+  const stmt = db.prepare(`
+    INSERT INTO players (auction_id, name, role, base_price, country, image_url, current_bid)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
 
-  const newPlayer = {
-    id: players.length > 0 ? Math.max(...players.map(p => p.id)) + 1 : 1,
-    auctionId: parseInt(auctionId),
+  const result = stmt.run(
+    auctionId,
     name,
-    role: role || 'All-rounder',
-    basePrice: basePrice || 100000,
-    country: country || 'India',
-    imageUrl: imageUrl || 'https://via.placeholder.com/150',
-    currentBid: basePrice || 100000,
-    currentBidder: null,
-    sold: false,
-    soldTo: null,
-    soldPrice: null
-  };
+    role || 'All-rounder',
+    basePrice || 100000,
+    country || 'India',
+    imageUrl || 'https://via.placeholder.com/150',
+    basePrice || 100000
+  );
 
-  players.push(newPlayer);
-  writeJSON(PLAYERS_FILE, players);
+  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(result.lastInsertRowid);
 
-  res.json(newPlayer);
+  res.json({
+    id: player.id,
+    auctionId: player.auction_id,
+    name: player.name,
+    role: player.role,
+    basePrice: player.base_price,
+    country: player.country,
+    imageUrl: player.image_url,
+    currentBid: player.current_bid,
+    currentBidder: player.current_bidder,
+    sold: Boolean(player.sold),
+    soldTo: player.sold_to,
+    soldPrice: player.sold_price
+  });
 });
 
-// Get all players (Scoped to Auction)
+// Get all players
 app.get('/api/players', authenticateToken, (req, res) => {
   const { auctionId } = req.query;
-  const players = readJSON(PLAYERS_FILE);
 
+  let players;
   if (auctionId) {
-    res.json(players.filter(p => p.auctionId === parseInt(auctionId)));
+    players = db.prepare('SELECT * FROM players WHERE auction_id = ?').all(parseInt(auctionId));
   } else {
-    res.json(players);
+    players = db.prepare('SELECT * FROM players').all();
   }
+
+  res.json(players.map(p => ({
+    id: p.id,
+    auctionId: p.auction_id,
+    name: p.name,
+    role: p.role,
+    basePrice: p.base_price,
+    country: p.country,
+    imageUrl: p.image_url,
+    currentBid: p.current_bid,
+    currentBidder: p.current_bidder,
+    sold: Boolean(p.sold),
+    soldTo: p.sold_to,
+    soldPrice: p.sold_price
+  })));
 });
 
-// Get player by ID
+// Get single player
 app.get('/api/players/:id', authenticateToken, (req, res) => {
-  const players = readJSON(PLAYERS_FILE);
-  const player = players.find(p => p.id === parseInt(req.params.id));
+  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(parseInt(req.params.id));
 
-  if (!player) {
-    return res.status(404).json({ error: 'Player not found' });
-  }
+  if (!player) return res.status(404).json({ error: 'Player not found' });
 
-  res.json(player);
+  res.json({
+    id: player.id,
+    auctionId: player.auction_id,
+    name: player.name,
+    role: player.role,
+    basePrice: player.base_price,
+    country: player.country,
+    imageUrl: player.image_url,
+    currentBid: player.current_bid,
+    currentBidder: player.current_bidder,
+    sold: Boolean(player.sold),
+    soldTo: player.sold_to,
+    soldPrice: player.sold_price
+  });
 });
 
 // Admin: Update player
 app.put('/api/admin/players/:id', authenticateToken, requireAdmin, (req, res) => {
   const { name, role, basePrice, country, imageUrl } = req.body;
-  const players = readJSON(PLAYERS_FILE);
+  const playerId = parseInt(req.params.id);
 
-  const playerIndex = players.findIndex(p => p.id === parseInt(req.params.id));
-  if (playerIndex === -1) {
-    return res.status(404).json({ error: 'Player not found' });
-  }
+  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+  if (!player) return res.status(404).json({ error: 'Player not found' });
 
-  const player = players[playerIndex];
+  db.prepare(`
+    UPDATE players 
+    SET name = ?, role = ?, base_price = ?, country = ?, image_url = ?
+    WHERE id = ?
+  `).run(
+    name || player.name,
+    role || player.role,
+    basePrice || player.base_price,
+    country || player.country,
+    imageUrl !== undefined ? imageUrl : player.image_url,
+    playerId
+  );
 
-  if (player.sold) {
-    return res.status(400).json({ error: 'Cannot edit a sold player' });
-  }
+  const updatedPlayer = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
 
-  players[playerIndex].name = name || player.name;
-  players[playerIndex].role = role || player.role;
-  players[playerIndex].basePrice = basePrice || player.basePrice;
-  players[playerIndex].country = country || player.country;
-  players[playerIndex].imageUrl = imageUrl || player.imageUrl;
-
-  if (basePrice && !player.currentBidder) {
-    players[playerIndex].currentBid = basePrice;
-  }
-
-  writeJSON(PLAYERS_FILE, players);
-  res.json(players[playerIndex]);
+  res.json({
+    id: updatedPlayer.id,
+    auctionId: updatedPlayer.auction_id,
+    name: updatedPlayer.name,
+    role: updatedPlayer.role,
+    basePrice: updatedPlayer.base_price,
+    country: updatedPlayer.country,
+    imageUrl: updatedPlayer.image_url,
+    currentBid: updatedPlayer.current_bid,
+    currentBidder: updatedPlayer.current_bidder,
+    sold: Boolean(updatedPlayer.sold),
+    soldTo: updatedPlayer.sold_to,
+    soldPrice: updatedPlayer.sold_price
+  });
 });
 
 // Admin: Delete player
 app.delete('/api/admin/players/:id', authenticateToken, requireAdmin, (req, res) => {
-  const players = readJSON(PLAYERS_FILE);
-  const playerIndex = players.findIndex(p => p.id === parseInt(req.params.id));
+  const playerId = parseInt(req.params.id);
+  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
 
-  if (playerIndex === -1) return res.status(404).json({ error: 'Player not found' });
+  if (!player) return res.status(404).json({ error: 'Player not found' });
 
-  const player = players[playerIndex];
   if (player.sold) {
     return res.status(400).json({ error: 'Cannot delete a sold player' });
   }
 
-  players.splice(playerIndex, 1);
-  writeJSON(PLAYERS_FILE, players);
+  db.prepare('DELETE FROM players WHERE id = ?').run(playerId);
   res.json({ success: true, message: 'Player deleted successfully' });
-});
-
-// Place bid
-app.post('/api/players/:id/bid', authenticateToken, (req, res) => {
-  const { amount } = req.body;
-  const players = readJSON(PLAYERS_FILE);
-  const teams = readJSON(TEAMS_FILE);
-  const bids = readJSON(BIDS_FILE);
-
-  const playerIndex = players.findIndex(p => p.id === parseInt(req.params.id));
-  if (playerIndex === -1) return res.status(404).json({ error: 'Player not found' });
-
-  const player = players[playerIndex];
-  if (player.sold) return res.status(400).json({ error: 'Player already sold' });
-  if (!req.user.team) return res.status(400).json({ error: 'Please select your team first' });
-
-  // Find team in the SAME auction as the player
-  const team = teams.find(t => t.name === req.user.team && t.auctionId === player.auctionId);
-  if (!team) return res.status(404).json({ error: 'Team not found in this auction' });
-
-  if (amount <= player.currentBid) return res.status(400).json({ error: 'Bid amount must be higher than current bid' });
-  if (amount > team.remainingBudget) return res.status(400).json({ error: 'Insufficient budget' });
-
-  players[playerIndex].currentBid = amount;
-  players[playerIndex].currentBidder = req.user.team;
-
-  const newBid = {
-    id: bids.length > 0 ? Math.max(...bids.map(b => b.id)) + 1 : 1,
-    auctionId: player.auctionId,
-    playerId: player.id,
-    playerName: player.name,
-    team: req.user.team,
-    amount,
-    timestamp: new Date().toISOString(),
-    bidderId: req.user.id
-  };
-
-  bids.push(newBid);
-  writeJSON(BIDS_FILE, bids);
-  writeJSON(PLAYERS_FILE, players);
-
-  res.json({ success: true, player: players[playerIndex], bid: newBid });
 });
 
 // Admin: Sell player
 app.post('/api/admin/players/:id/sell', authenticateToken, requireAdmin, (req, res) => {
-  const players = readJSON(PLAYERS_FILE);
-  const teams = readJSON(TEAMS_FILE);
+  const playerId = parseInt(req.params.id);
+  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
 
-  const playerIndex = players.findIndex(p => p.id === parseInt(req.params.id));
-  if (playerIndex === -1) return res.status(404).json({ error: 'Player not found' });
+  if (!player) return res.status(404).json({ error: 'Player not found' });
 
-  const player = players[playerIndex];
-  if (player.sold) return res.status(400).json({ error: 'Player already sold' });
-  if (!player.currentBidder) return res.status(400).json({ error: 'No bids placed on this player' });
-
-  const team = teams.find(t => t.name === player.currentBidder && t.auctionId === player.auctionId);
-  if (team) {
-    team.remainingBudget -= player.currentBid;
-    team.players.push({
-      id: player.id,
-      name: player.name,
-      role: player.role,
-      price: player.currentBid,
-      imageUrl: player.imageUrl
-    });
-    writeJSON(TEAMS_FILE, teams);
+  if (!player.current_bidder) {
+    return res.status(400).json({ error: 'No bids placed for this player' });
   }
 
-  players[playerIndex].sold = true;
-  players[playerIndex].soldTo = player.currentBidder;
-  players[playerIndex].soldPrice = player.currentBid;
+  // Update player as sold
+  db.prepare(`
+    UPDATE players 
+    SET sold = 1, sold_to = ?, sold_price = ?
+    WHERE id = ?
+  `).run(player.current_bidder, player.current_bid, playerId);
 
-  writeJSON(PLAYERS_FILE, players);
-  res.json({ success: true, player: players[playerIndex] });
+  // Update team budget
+  const team = db.prepare('SELECT * FROM teams WHERE name = ? AND auction_id = ?')
+    .get(player.current_bidder, player.auction_id);
+
+  if (team) {
+    const newBudget = team.remaining_budget - player.current_bid;
+    db.prepare('UPDATE teams SET remaining_budget = ? WHERE id = ?').run(newBudget, team.id);
+  }
+
+  res.json({ success: true, message: 'Player sold successfully' });
 });
 
-// Get bids for a player
+// ===== BID ROUTES =====
+
+// Place bid
+app.post('/api/bids', authenticateToken, (req, res) => {
+  const { playerId, amount, auctionId } = req.body;
+  const team = req.user.team;
+
+  if (!team) {
+    return res.status(400).json({ error: 'Please select a team first' });
+  }
+
+  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+  if (!player) return res.status(404).json({ error: 'Player not found' });
+
+  if (player.sold) {
+    return res.status(400).json({ error: 'Player already sold' });
+  }
+
+  if (amount <= player.current_bid) {
+    return res.status(400).json({ error: 'Bid must be higher than current bid' });
+  }
+
+  const teamData = db.prepare('SELECT * FROM teams WHERE name = ? AND auction_id = ?')
+    .get(team, auctionId);
+
+  if (!teamData) {
+    return res.status(404).json({ error: 'Team not found' });
+  }
+
+  if (amount > teamData.remaining_budget) {
+    return res.status(400).json({ error: 'Insufficient budget' });
+  }
+
+  // Record bid
+  db.prepare(`
+    INSERT INTO bids (auction_id, player_id, team, amount)
+    VALUES (?, ?, ?, ?)
+  `).run(auctionId, playerId, team, amount);
+
+  // Update player
+  db.prepare(`
+    UPDATE players 
+    SET current_bid = ?, current_bidder = ?
+    WHERE id = ?
+  `).run(amount, team, playerId);
+
+  res.json({ success: true, message: 'Bid placed successfully' });
+});
+
+// Get bid history for a player
 app.get('/api/players/:id/bids', authenticateToken, (req, res) => {
-  const bids = readJSON(BIDS_FILE);
-  const playerBids = bids.filter(b => b.playerId === parseInt(req.params.id));
-  res.json(playerBids.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+  const playerId = parseInt(req.params.id);
+  const bids = db.prepare(`
+    SELECT * FROM bids 
+    WHERE player_id = ? 
+    ORDER BY timestamp DESC
+  `).all(playerId);
+
+  res.json(bids);
 });
 
-// Get Player Library (Unique players from admin's auctions)
+// ===== LIBRARY ROUTES =====
+
+// Get library players
 app.get('/api/admin/library/players', authenticateToken, requireAdmin, (req, res) => {
-  const auctions = readJSON(AUCTIONS_FILE);
-  const players = readJSON(PLAYERS_FILE);
-
-  // Get all auction IDs created by this admin
-  const adminAuctionIds = auctions
-    .filter(a => a.adminId === req.user.id)
-    .map(a => a.id);
-
-  // Get all players from these auctions
-  const adminPlayers = players.filter(p => adminAuctionIds.includes(p.auctionId));
-
-  // Deduplicate by name (keep the latest one)
-  const uniquePlayers = {};
-  adminPlayers.forEach(p => {
-    uniquePlayers[p.name] = p;
-  });
-
-  res.json(Object.values(uniquePlayers));
+  const players = db.prepare('SELECT * FROM library_players').all();
+  res.json(players.map(p => ({
+    id: p.id,
+    name: p.name,
+    role: p.role,
+    basePrice: p.base_price,
+    country: p.country,
+    imageUrl: p.image_url
+  })));
 });
 
-// Bulk Import Players
+// Bulk import players
 app.post('/api/admin/players/bulk', authenticateToken, requireAdmin, (req, res) => {
-  const { players: newPlayersData, auctionId } = req.body;
+  const { players, auctionId } = req.body;
 
   if (!auctionId) return res.status(400).json({ error: 'Auction ID required' });
-  if (!newPlayersData || !Array.isArray(newPlayersData)) return res.status(400).json({ error: 'Invalid players data' });
 
-  const players = readJSON(PLAYERS_FILE);
-  let maxId = players.length > 0 ? Math.max(...players.map(p => p.id)) : 0;
+  const stmt = db.prepare(`
+    INSERT INTO players (auction_id, name, role, base_price, country, image_url, current_bid)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
 
-  const createdPlayers = newPlayersData.map(p => {
-    maxId++;
-    return {
-      id: maxId,
-      auctionId: parseInt(auctionId),
-      name: p.name,
-      role: p.role || 'All-rounder',
-      basePrice: p.basePrice || 100000,
-      country: p.country || 'India',
-      imageUrl: p.imageUrl || 'https://via.placeholder.com/150',
-      currentBid: p.basePrice || 100000,
-      currentBidder: null,
-      sold: false,
-      soldTo: null,
-      soldPrice: null
-    };
-  });
+  let count = 0;
+  for (const player of players) {
+    stmt.run(
+      auctionId,
+      player.name,
+      player.role,
+      player.basePrice || 100000,
+      player.country || 'India',
+      player.imageUrl || 'https://via.placeholder.com/150',
+      player.basePrice || 100000
+    );
+    count++;
+  }
 
-  players.push(...createdPlayers);
-  writeJSON(PLAYERS_FILE, players);
-
-  res.json({ success: true, count: createdPlayers.length });
+  res.json({ success: true, count, message: `${count} players imported successfully` });
 });
 
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  if (process.env.NODE_ENV === 'production') {
-    console.log(`App is live! Frontend and API available at the same URL.`);
-  }
+  console.log('Database: SQLite (auction.db)');
 });
-

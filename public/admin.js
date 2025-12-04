@@ -472,6 +472,50 @@ async function importSelectedPlayers() {
     }
 }
 
+// --- Add to Library Functions ---
+
+function openAddToLibraryModal() {
+    document.getElementById('addToLibraryModal').style.display = 'flex';
+}
+
+function closeAddToLibraryModal() {
+    document.getElementById('addToLibraryModal').style.display = 'none';
+    document.getElementById('addToLibraryForm').reset();
+}
+
+document.getElementById('addToLibraryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const playerData = {
+        name: formData.get('name'),
+        role: formData.get('role'),
+        basePrice: parseInt(formData.get('basePrice')),
+        country: formData.get('country'),
+        imageUrl: formData.get('imageUrl')
+    };
+
+    try {
+        await apiRequest('/admin/library/players', {
+            method: 'POST',
+            body: JSON.stringify(playerData)
+        });
+
+        showSuccess('Player added to library successfully!');
+        closeAddToLibraryModal();
+
+        // Refresh library list
+        const players = await apiRequest('/admin/library/players');
+        libraryPlayers = players;
+        renderLibrary(players);
+
+        // Re-apply filter if any
+        filterLibrary();
+    } catch (error) {
+        showError('Failed to add player to library: ' + error.message);
+    }
+});
+
 // Initialize when page loads
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAdmin);

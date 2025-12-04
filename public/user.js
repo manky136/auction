@@ -286,9 +286,13 @@ function setupBidModal() {
         const amount = parseInt(document.getElementById('bidAmount').value);
 
         try {
-            await apiRequest(`/players/${selectedPlayerId}/bid`, {
+            await apiRequest(`/bids`, {
                 method: 'POST',
-                body: JSON.stringify({ amount })
+                body: JSON.stringify({
+                    playerId: selectedPlayerId,
+                    amount: amount,
+                    auctionId: currentAuction.id
+                })
             });
 
             modal.style.display = 'none';

@@ -609,6 +609,17 @@ app.post('/api/admin/library/players', authenticateToken, requireAdmin, (req, re
   });
 });
 
+// Delete player from library
+app.delete('/api/admin/library/players/:id', authenticateToken, requireAdmin, (req, res) => {
+  const playerId = parseInt(req.params.id);
+  const player = db.prepare('SELECT * FROM library_players WHERE id = ?').get(playerId);
+
+  if (!player) return res.status(404).json({ error: 'Player not found in library' });
+
+  db.prepare('DELETE FROM library_players WHERE id = ?').run(playerId);
+  res.json({ success: true, message: 'Player removed from library' });
+});
+
 // Bulk import players
 app.post('/api/admin/players/bulk', authenticateToken, requireAdmin, (req, res) => {
   const { players, auctionId } = req.body;

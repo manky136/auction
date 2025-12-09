@@ -211,6 +211,7 @@ async function loadPlayers() {
                         <button class="btn btn-edit" onclick="editPlayer(${player.id})">Edit</button>
                         <button class="btn btn-danger" onclick="removePlayer(${player.id})">Remove</button>
                         <button class="btn btn-success" onclick="sellPlayer(${player.id})">Sell Player</button>
+                        <button class="btn btn-secondary" onclick="saveToLibrary(${player.id})">💾 Save</button>
                     </div>
                 `;
             }
@@ -422,18 +423,42 @@ function renderLibrary(players) {
     players.forEach(player => {
         const item = document.createElement('div');
         item.className = 'library-item';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+
         item.innerHTML = `
-            <input type="checkbox" class="player-select" value="${player.name}" data-player='${JSON.stringify(player).replace(/'/g, "&apos;")}'>
-            <div class="library-player-info">
-                ${player.imageUrl ? `<img src="${player.imageUrl}" class="mini-player-img">` : ''}
-                <div>
-                    <strong>${player.name}</strong><br>
-                    <small>${player.role} - ${player.country}</small>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" class="player-select" value="${player.name}" data-player='${JSON.stringify(player).replace(/'/g, "&apos;")}'>
+                <div class="library-player-info" style="display: flex; align-items: center; gap: 10px;">
+                    ${player.imageUrl ? `<img src="${player.imageUrl}" class="mini-player-img" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` : ''}
+                    <div>
+                        <strong>${player.name}</strong><br>
+                        <small>${player.role} - ${player.country}</small>
+                    </div>
                 </div>
             </div>
+            <button onclick="deleteLibraryPlayer(${player.id})" class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;">🗑️</button>
         `;
         list.appendChild(item);
     });
+}
+
+async function deleteLibraryPlayer(id) {
+    if (!confirm('Are you sure you want to remove this player from the library?')) return;
+
+    try {
+        await apiRequest(`/admin/library/players/${id}`, { method: 'DELETE' });
+
+        // Refresh library
+        const players = await apiRequest('/admin/library/players');
+        libraryPlayers = players;
+        renderLibrary(players);
+        filterLibrary(); // Re-apply filter if active
+        showSuccess('Player removed from library');
+    } catch (error) {
+        showError('Failed to delete: ' + error.message);
+    }
 }
 
 function filterLibrary() {
@@ -515,6 +540,29 @@ document.getElementById('addToLibraryForm').addEventListener('submit', async (e)
         showError('Failed to add player to library: ' + error.message);
     }
 });
+
+async function saveToLibrary(playerId) {
+    try {
+        // Get player details
+        const player = await apiRequest(`/players/${playerId}`);
+
+        // Add to library
+        await apiRequest('/admin/library/players', {
+            method: 'POST',
+            body: JSON.stringify({
+                name: player.name,
+                role: player.role,
+                basePrice: player.basePrice,
+                country: player.country,
+                imageUrl: player.imageUrl
+            })
+        });
+
+        showSuccess('Player saved to library!');
+    } catch (error) {
+        showError('Failed to save to library: ' + error.message);
+    }
+}
 
 // Initialize when page loads
 if (document.readyState === 'loading') {

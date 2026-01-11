@@ -92,50 +92,68 @@
     </style>
 </head>
 
-<body>
+<body class="bidder-mode">
     <nav class="navbar">
         <div class="nav-container">
-            <h1>🏏 Cricket Auction</h1>
+            <h1 style="color: white;">🏏 Cricket Auction <span
+                    style="font-size: 0.8rem; opacity: 0.7; font-weight: normal;">LIVE</span></h1>
             <div class="nav-links">
-                <span id="userUsername"></span>
-                <span id="userTeam" class="team-badge"></span>
-                <button onclick="logout()" class="btn btn-secondary">Logout</button>
+                <span id="userUsername" class="hero-stat-badge"></span>
+                <span id="userTeam" class="team-badge"
+                    style="background: linear-gradient(135deg, #ec4899, #db2777);"></span>
+                <button onclick="logout()" class="btn btn-secondary"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Logout</button>
             </div>
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container" style="max-width: 1400px; padding-top: 40px;">
         <!-- Team Selection (if not selected) -->
-        <div id="teamSelectionSection" class="card" style="display: none;">
-            <h2>Select Your Team</h2>
-            <p>Please select a team before you can start bidding.</p>
+        <div id="teamSelectionSection" class="glass-card"
+            style="display: none; max-width: 800px; margin: 40px auto; text-align: center;">
+            <h2
+                style="font-size: 2.5rem; margin-bottom: 20px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                Select Your Team</h2>
+            <p style="color: #cbd5e1; margin-bottom: 30px;">Choose your franchise to begin the bidding war.</p>
             <div id="teamSelectionList" class="teams-grid"></div>
         </div>
 
         <!-- User Dashboard -->
         <div id="userDashboard" style="display: none;">
-            <!-- My Team Info -->
-            <section class="card">
-                <h2>My Team</h2>
-                <div id="myTeamInfo"></div>
-            </section>
 
-            <!-- Available Players for Bidding -->
-            <section class="card">
-                <h2>Available Players</h2>
-                <div id="availablePlayers" class="players-grid"></div>
-            </section>
+            <div style="display: grid; grid-template-columns: 1fr 350px; gap: 30px; align-items: start;">
 
-            <!-- Sold Players -->
-            <section class="card">
-                <h2>Sold Players</h2>
-                <div id="soldPlayers" class="players-grid"></div>
-            </section>
+                <!-- LEFT COLUMN: Active Player (Main Stage) -->
+                <div>
+                    <div id="availablePlayers">
+                        <!-- Content injected by JS -->
+                    </div>
+                </div>
 
-            <!-- All Teams Status -->
-            <section class="card">
-                <h2>All Teams</h2>
-                <div id="allTeamsList" class="teams-grid"></div>
+                <!-- RIGHT COLUMN: Stats & history -->
+                <div style="display: flex; flex-direction: column; gap: 30px;">
+                    <!-- My Team Info -->
+                    <section class="glass-card">
+                        <h2
+                            style="font-size: 1.5rem; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                            📊 My Franchise</h2>
+                        <div id="myTeamInfo"></div>
+                    </section>
+
+                    <!-- Sold Players -->
+                    <section class="glass-card" style="max-height: 400px; overflow-y: auto;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 20px;">📜 Recent Sales</h2>
+                        <div id="soldPlayers" class="players-grid" style="grid-template-columns: 1fr;"></div>
+                    </section>
+                </div>
+
+            </div>
+
+            <!-- All Teams Status (Below) -->
+            <section class="glass-card" style="margin-top: 30px;">
+                <h2>🌍 All Franchises</h2>
+                <div id="allTeamsList" class="teams-grid"
+                    style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"></div>
             </section>
         </div>
     </div>

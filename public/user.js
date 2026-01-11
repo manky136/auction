@@ -53,18 +53,24 @@ async function loadTeamSelection() {
         teamSelectionList.innerHTML = '';
 
         if (teams.length === 0) {
-            teamSelectionList.innerHTML = '<p>No teams available. Please contact admin.</p>';
+            teamSelectionList.innerHTML = '<p style="color: #cbd5e1;">No teams available. Please contact admin.</p>';
             return;
         }
 
         teams.forEach(team => {
             const teamCard = document.createElement('div');
+            // Use glass card for team selection items too, or just a nice hoverable div
             teamCard.className = 'team-card';
+            teamCard.style.background = 'rgba(255,255,255,0.05)';
+            teamCard.style.border = '1px solid rgba(255,255,255,0.1)';
+            teamCard.style.color = 'white';
+
             teamCard.innerHTML = `
-                <h3>${team.name}</h3>
-                <p><strong>Budget:</strong> ₹${team.budget.toLocaleString()}</p>
-                <p><strong>Remaining:</strong> ₹${team.remainingBudget.toLocaleString()}</p>
-                <p><strong>Players:</strong> ${team.players.length}</p>
+                <h3 style="color:white; font-size: 1.5rem; margin-bottom: 10px;">${team.name}</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left;">
+                    <p style="color: #94a3b8;">Budget: <br><span style="color:white; font-weight:bold;">₹${team.budget.toLocaleString()}</span></p>
+                    <p style="color: #94a3b8;">Remaining: <br><span style="color: #10b981; font-weight:bold;">₹${team.remainingBudget.toLocaleString()}</span></p>
+                </div>
             `;
             teamCard.addEventListener('click', () => selectTeam(team.name));
             teamSelectionList.appendChild(teamCard);
@@ -120,31 +126,35 @@ async function loadMyTeamInfo() {
         }
 
         myTeamInfo.innerHTML = `
-            <div class="team-info-item">
-                <strong>Team Name:</strong> ${myTeam.name}
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 0.9rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Remaining Purse</div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: #10b981; text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);">₹${myTeam.remainingBudget.toLocaleString()}</div>
             </div>
-            <div class="team-info-item">
-                <strong>Total Budget:</strong> ₹${myTeam.budget.toLocaleString()}
+            
+            <div style="display: grid; gap: 10px;">
+                <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between;">
+                    <span style="color: #cbd5e1;">Total Budget</span>
+                    <span style="font-weight: bold; color: white;">₹${myTeam.budget.toLocaleString()}</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between;">
+                    <span style="color: #cbd5e1;">Squad Size</span>
+                    <span style="font-weight: bold; color: white;">${myTeam.players.length}/25</span>
+                </div>
             </div>
-            <div class="team-info-item">
-                <strong>Remaining Budget:</strong> ₹${myTeam.remainingBudget.toLocaleString()}
-            </div>
-            <div class="team-info-item">
-                <strong>Players Purchased:</strong> ${myTeam.players.length}
-                ${myTeam.players.length > 0 ? `
-                    <div class="team-players-list">
+
+            ${myTeam.players.length > 0 ? `
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #94a3b8; margin-bottom: 10px;">Squad</h4>
+                    <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
                         ${myTeam.players.map(p => `
-                            <div class="team-player">
-                                ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}" class="mini-player-img">` : ''}
-                                <div>
-                                    <strong>${p.name}</strong><br>
-                                    ${p.role} - ₹${p.price.toLocaleString()}
-                                </div>
+                            <div style="min-width: 60px; text-align: center;">
+                                ${p.imageUrl ? `<img src="${p.imageUrl}" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #555; object-fit: cover;">` : '<div style="width: 50px; height: 50px; border-radius: 50%; background: #333; margin: 0 auto;"></div>'}
+                                <div style="font-size: 0.7rem; color: #cbd5e1; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px;">${p.name.split(' ')[0]}</div>
                             </div>
                         `).join('')}
                     </div>
-                ` : ''}
-            </div>
+                </div>
+            ` : ''}
         `;
     } catch (error) {
         console.error('Error loading team info:', error);
@@ -158,18 +168,17 @@ async function loadActivePlayer() {
         const activePlayerId = statusRes.currentPlayerId;
         const container = document.getElementById('availablePlayers');
 
+        // Clear header from previous style if exists, or just clear container
         container.innerHTML = '';
 
-        // Update header if exists
-        const header = container.previousElementSibling;
-        if (header && header.tagName === 'H2') header.textContent = '🔥 Current Player to Bid';
-
+        // Hide/Show Waiting Screen vs Player
         if (!activePlayerId) {
             container.innerHTML = `
-                <div style="text-align: center; padding: 40px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 3rem; margin-bottom: 20px;">⏳</div>
-                    <h3>Waiting for Admin...</h3>
-                    <p>The next player will be announced shortly. Please wait.</p>
+                <div class="glass-card wait-screen">
+                    <div class="radar-spinner"></div>
+                    <h2 style="font-size: 2rem; margin-bottom: 10px; color: white;">Auction Paused</h2>
+                    <p style="font-size: 1.2rem; color: #94a3b8;">Waiting for the Auctioneer to announce the next player...</p>
+                    <div style="margin-top: 30px; font-size: 0.9rem; color: #64748b;">LIVE FEED • WAITING SIGNAL</div>
                 </div>
             `;
             return;
@@ -177,49 +186,55 @@ async function loadActivePlayer() {
 
         // Fetch active player details
         const player = await apiRequest(`/players/${activePlayerId}`);
-
-        // Also fetch latest bids for this player to show live updates
         const bids = await apiRequest(`/players/${player.id}/bids`);
         const lastBid = bids[0];
 
-        let imageHtml = player.imageUrl ? `<img src="${player.imageUrl}" alt="${player.name}" class="player-image" style="width: 200px; height: 200px; margin: 0 auto; display: block; border-radius: 50%;">` : '';
+        // RENDER ACTIVE PLAYER CARD
+        let imageHtml = player.imageUrl || 'https://via.placeholder.com/300';
 
-        const playerCard = document.createElement('div');
-        playerCard.className = 'player-card';
-        playerCard.style.maxWidth = '600px';
-        playerCard.style.margin = '0 auto';
-        playerCard.style.textAlign = 'center';
+        const card = document.createElement('div');
+        card.className = 'glass-card hero-active-player';
 
-        playerCard.innerHTML = `
-            ${imageHtml}
-            <h2 style="font-size: 2rem; margin: 10px 0;">${player.name}</h2>
-            <div class="player-info" style="justify-content: center;">
-                <strong>Role:</strong> ${player.role} | <strong>Country:</strong> ${player.country}
-            </div>
-            <div class="player-info" style="justify-content: center;">
-                <strong>Base Price:</strong> ₹${player.basePrice.toLocaleString()}
+        card.innerHTML = `
+            <div class="hero-player-img-container">
+                <img src="${imageHtml}" alt="${player.name}" class="hero-player-img">
             </div>
             
-            <div class="current-bid" style="margin: 20px 0; padding: 20px; background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px;">
-                <div style="font-size: 1rem; color: #555;">Current Highest Bid</div>
-                <div class="amount" style="font-size: 2.5rem; color: #1565c0;">₹${player.currentBid.toLocaleString()}</div>
-                ${player.currentBidder ?
-                `<div class="current-bidder" style="font-size: 1.2rem; margin-top: 10px;">Held by: <strong>${player.currentBidder}</strong></div>` :
-                '<div class="current-bidder">No bids yet</div>'}
-            </div>
+            <div class="hero-player-info">
+                <div style="margin-bottom: 5px;">
+                    <span class="hero-stat-badge" style="background: #e11d48; border-color: #e11d48; color: white;">LIVE AUCTION</span>
+                    <span class="hero-stat-badge">${player.auctionId ? '#' + player.auctionId : '#001'}</span>
+                </div>
+                
+                <h1>${player.name}</h1>
+                
+                <div class="hero-details-grid">
+                    <div class="hero-stat-badge">🏏 ${player.role}</div>
+                    <div class="hero-stat-badge">🌍 ${player.country}</div>
+                    <div class="hero-stat-badge">💰 Base: ₹${player.basePrice.toLocaleString()}</div>
+                </div>
 
-            <button class="btn btn-bid" style="font-size: 1.3rem; padding: 15px 40px; width: 100%;" onclick="openBidModal(${player.id})">💰 PLACE BID</button>
+                <div class="live-bid-container">
+                    <div class="live-bid-label">Current Highest Bid</div>
+                    <div class="live-bid-amount">₹${player.currentBid.toLocaleString()}</div>
+                    <div class="bid-holder">
+                        ${player.currentBidder ?
+                `Held by <span style="color: #fbbf24; font-weight: bold;">${player.currentBidder}</span>` :
+                '<span style="opacity: 0.5;">No Bids Yet</span>'}
+                    </div>
+                </div>
+                
+                <button onclick="openBidModal(${player.id})" class="btn-mega-bid">
+                    💰 Place Bid
+                </button>
+            </div>
         `;
 
-        if (lastBid) {
-            // Optional: Add some animation or indication of new bid if we were fancy
-        }
-
-        container.appendChild(playerCard);
+        container.appendChild(card);
 
     } catch (error) {
         console.error('Error loading active player:', error);
-        document.getElementById('availablePlayers').innerHTML = '<p>Error loading auction status.</p>';
+        document.getElementById('availablePlayers').innerHTML = '<p class="glass-card" style="padding: 20px; color: red;">Error connection to auction server.</p>';
     }
 }
 

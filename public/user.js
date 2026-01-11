@@ -2,6 +2,8 @@
 
 let selectedPlayerId = null;
 let currentAuction = null;
+let previousBidAmount = 0;
+let lastSoldPlayerId = null;
 
 // Initialize user dashboard
 async function initUser() {

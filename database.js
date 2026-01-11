@@ -10,8 +10,8 @@ db.pragma('foreign_keys = ON');
 
 // Create tables
 function initializeDatabase() {
-    // Users table
-    db.exec(`
+  // Users table
+  db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -22,21 +22,35 @@ function initializeDatabase() {
     )
   `);
 
-    // Auctions table
-    db.exec(`
+  // Auctions table
+  db.exec(`
     CREATE TABLE IF NOT EXISTS auctions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       admin_id INTEGER NOT NULL,
       name TEXT NOT NULL,
       code TEXT UNIQUE NOT NULL,
       status TEXT DEFAULT 'active',
+      current_player_id INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (admin_id) REFERENCES users(id)
+      FOREIGN KEY (admin_id) REFERENCES users(id),
+      FOREIGN KEY (current_player_id) REFERENCES players(id)
     )
   `);
 
-    // Teams table
-    db.exec(`
+  // Migration: Add current_player_id if not exists (for existing databases)
+  try {
+    const tableInfo = db.pragma('table_info(auctions)');
+    const hasCurrentPlayerId = tableInfo.some(col => col.name === 'current_player_id');
+    if (!hasCurrentPlayerId) {
+      db.exec('ALTER TABLE auctions ADD COLUMN current_player_id INTEGER REFERENCES players(id)');
+      console.log('Migrated auctions table: added current_player_id column');
+    }
+  } catch (err) {
+    console.error('Migration error:', err);
+  }
+
+  // Teams table
+  db.exec(`
     CREATE TABLE IF NOT EXISTS teams (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       auction_id INTEGER NOT NULL,
@@ -48,8 +62,8 @@ function initializeDatabase() {
     )
   `);
 
-    // Players table
-    db.exec(`
+  // Players table
+  db.exec(`
     CREATE TABLE IF NOT EXISTS players (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       auction_id INTEGER NOT NULL,
@@ -68,8 +82,8 @@ function initializeDatabase() {
     )
   `);
 
-    // Bids table
-    db.exec(`
+  // Bids table
+  db.exec(`
     CREATE TABLE IF NOT EXISTS bids (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       auction_id INTEGER NOT NULL,
@@ -82,8 +96,8 @@ function initializeDatabase() {
     )
   `);
 
-    // Library players table
-    db.exec(`
+  // Library players table
+  db.exec(`
     CREATE TABLE IF NOT EXISTS library_players (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -95,31 +109,31 @@ function initializeDatabase() {
     )
   `);
 
-    // Create default admin user if no users exist
-    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
-    if (userCount.count === 0) {
-        const hashedPassword = bcrypt.hashSync('admin123', 10);
-        db.prepare(`
+  // Create default admin user if no users exist
+  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get();
+  if (userCount.count === 0) {
+    const hashedPassword = bcrypt.hashSync('admin123', 10);
+    db.prepare(`
       INSERT INTO users (username, password, role, team)
       VALUES (?, ?, ?, ?)
     `).run('admin', hashedPassword, 'admin', null);
-        console.log('Default admin user created (username: admin, password: admin123)');
-    }
+    console.log('Default admin user created (username: admin, password: admin123)');
+  }
 }
 
 // Helper functions for team players JSON field
 function getTeamPlayers(teamId) {
-    const players = db.prepare(`
+  const players = db.prepare(`
     SELECT p.* FROM players p
     WHERE p.sold = 1 AND p.sold_to = (SELECT name FROM teams WHERE id = ?)
   `).all(teamId);
-    return players;
+  return players;
 }
 
 // Initialize database on module load
 initializeDatabase();
 
 module.exports = {
-    db,
-    getTeamPlayers
+  db,
+  getTeamPlayers
 };

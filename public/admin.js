@@ -160,16 +160,57 @@ async function loadTeams() {
 // Load players
 async function loadPlayers() {
     try {
-        const players = await apiRequest(`/players?auctionId=${currentAuction.id}`);
+        // Fetch status first to know active player and players list
+        const [statusRes, players] = await Promise.all([
+            apiRequest(`/auctions/${currentAuction.id}/status`),
+            apiRequest(`/players?auctionId=${currentAuction.id}`)
+        ]);
+
         const playersList = document.getElementById('playersList');
+        const activePlayerCard = document.getElementById('activePlayerCard');
+        const activePlayerSection = document.getElementById('activePlayerSection');
+
         playersList.innerHTML = '';
+        activePlayerCard.innerHTML = '';
 
         if (players.length === 0) {
             playersList.innerHTML = '<p>No players added yet.</p>';
+            activePlayerSection.style.display = 'none';
             return;
         }
 
+        const activePlayerId = statusRes.currentPlayerId;
+        let hasActive = false;
+
         players.forEach(player => {
+            // If this is the active player, show in separate section
+            if (activePlayerId && player.id === activePlayerId && !player.sold) {
+                hasActive = true;
+                activePlayerSection.style.display = 'block';
+
+                let imageHtml = player.imageUrl ? `<img src="${player.imageUrl}" alt="${player.name}" class="player-image" style="width: 150px; height: 150px;">` : '';
+
+                activePlayerCard.innerHTML = `
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        ${imageHtml}
+                        <div style="flex: 1;">
+                            <h2 style="margin: 0; color: #3b82f6;">${player.name}</h2>
+                            <p style="font-size: 1.1rem; color: #555;">${player.role} | ${player.country}</p>
+                            <div class="current-bid" style="margin-top: 15px; padding: 15px; background: #eeffee; border: 2px solid #4caf50;">
+                                <div style="font-size: 0.9rem; color: #666;">Current Bid</div>
+                                <div class="amount" style="font-size: 2rem;">₹${player.currentBid.toLocaleString()}</div>
+                                ${player.currentBidder ? `<div class="current-bidder" style="font-size: 1.2rem; font-weight: bold; color: #2e7d32;">🏆 ${player.currentBidder}</div>` : '<div class="current-bidder">No bids yet</div>'}
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button class="btn btn-success" style="font-size: 1.2rem; padding: 10px 20px;" onclick="sellPlayer(${player.id})">🔨 SELL NOW</button>
+                        </div>
+                    </div>
+                `;
+                return; // Don't add to main list
+            }
+
+            // Normal list rendering
             const playerCard = document.createElement('div');
             playerCard.className = `player-card ${player.sold ? 'sold' : ''}`;
 
@@ -179,47 +220,66 @@ async function loadPlayers() {
                 playerCard.innerHTML = `
                     ${imageHtml}
                     <h3>${player.name}</h3>
-                    <div class="player-info">
-                        <strong>Role:</strong> ${player.role}
-                    </div>
-                    <div class="player-info">
-                        <strong>Country:</strong> ${player.country}
-                    </div>
+                    <div class="player-info"><strong>Role:</strong> ${player.role}</div>
                     <div class="sold-info">
                         <div class="amount">₹${player.soldPrice.toLocaleString()}</div>
                         <div>Sold to: ${player.soldTo}</div>
                     </div>
                 `;
             } else {
+                // Unsold player
                 playerCard.innerHTML = `
                     ${imageHtml}
                     <h3>${player.name}</h3>
                     <div class="player-info">
-                        <strong>Role:</strong> ${player.role}
-                    </div>
-                    <div class="player-info">
-                        <strong>Country:</strong> ${player.country}
-                    </div>
-                    <div class="player-info">
-                        <strong>Base Price:</strong> ₹${player.basePrice.toLocaleString()}
-                    </div>
-                    <div class="current-bid">
-                        <div class="amount">₹${player.currentBid.toLocaleString()}</div>
-                        ${player.currentBidder ? `<div class="current-bidder">Current Bidder: ${player.currentBidder}</div>` : '<div class="current-bidder">No bids yet</div>'}
+                        <strong>Role:</strong> ${player.role}<br>
+                        <strong>Base:</strong> ₹${player.basePrice.toLocaleString()}
                     </div>
                     <div class="player-actions">
+                        <button class="btn btn-primary" onclick="startBidding(${player.id})">📢 Start Bidding</button>
                         <button class="btn btn-edit" onclick="editPlayer(${player.id})">Edit</button>
                         <button class="btn btn-danger" onclick="removePlayer(${player.id})">Remove</button>
-                        <button class="btn btn-success" onclick="sellPlayer(${player.id})">Sell Player</button>
-                        <button class="btn btn-secondary" onclick="saveToLibrary(${player.id})">💾 Save</button>
                     </div>
                 `;
             }
 
             playersList.appendChild(playerCard);
         });
+
+        if (!hasActive) {
+            activePlayerSection.style.display = 'none';
+        }
+
     } catch (error) {
         console.error('Error loading players:', error);
+    }
+}
+
+// Start Bidding
+async function startBidding(playerId) {
+    try {
+        await apiRequest(`/admin/auctions/${currentAuction.id}/current-player`, {
+            method: 'POST',
+            body: JSON.stringify({ playerId })
+        });
+        loadPlayers();
+        showSuccess('Bidding started for player!');
+    } catch (error) {
+        showError(error.message);
+    }
+}
+
+// Stop Bidding
+async function stopBidding() {
+    try {
+        await apiRequest(`/admin/auctions/${currentAuction.id}/current-player`, {
+            method: 'POST',
+            body: JSON.stringify({ playerId: null })
+        });
+        loadPlayers();
+        showSuccess('Bidding stopped.');
+    } catch (error) {
+        showError(error.message);
     }
 }
 

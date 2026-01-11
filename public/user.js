@@ -102,7 +102,7 @@ async function loadUserDashboard() {
     document.getElementById('userDashboard').style.display = 'block';
 
     await loadMyTeamInfo();
-    await loadAvailablePlayers();
+    await loadActivePlayer();
     await loadSoldPlayers();
     await loadAllTeams();
 }
@@ -151,48 +151,75 @@ async function loadMyTeamInfo() {
     }
 }
 
-// Load available players
-async function loadAvailablePlayers() {
+// Load active player (Sequential Flow)
+async function loadActivePlayer() {
     try {
-        const players = await apiRequest(`/players?auctionId=${currentAuction.id}`);
-        const availablePlayers = players.filter(p => !p.sold);
-        const availablePlayersDiv = document.getElementById('availablePlayers');
+        const statusRes = await apiRequest(`/auctions/${currentAuction.id}/status`);
+        const activePlayerId = statusRes.currentPlayerId;
+        const container = document.getElementById('availablePlayers');
 
-        availablePlayersDiv.innerHTML = '';
+        container.innerHTML = '';
 
-        if (availablePlayers.length === 0) {
-            availablePlayersDiv.innerHTML = '<p>No players available for bidding.</p>';
+        // Update header if exists
+        const header = container.previousElementSibling;
+        if (header && header.tagName === 'H2') header.textContent = '🔥 Current Player to Bid';
+
+        if (!activePlayerId) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">⏳</div>
+                    <h3>Waiting for Admin...</h3>
+                    <p>The next player will be announced shortly. Please wait.</p>
+                </div>
+            `;
             return;
         }
 
-        availablePlayers.forEach(player => {
-            const playerCard = document.createElement('div');
-            playerCard.className = 'player-card';
+        // Fetch active player details
+        const player = await apiRequest(`/players/${activePlayerId}`);
 
-            let imageHtml = player.imageUrl ? `<img src="${player.imageUrl}" alt="${player.name}" class="player-image">` : '';
+        // Also fetch latest bids for this player to show live updates
+        const bids = await apiRequest(`/players/${player.id}/bids`);
+        const lastBid = bids[0];
 
-            playerCard.innerHTML = `
-                ${imageHtml}
-                <h3>${player.name}</h3>
-                <div class="player-info">
-                    <strong>Role:</strong> ${player.role}
-                </div>
-                <div class="player-info">
-                    <strong>Country:</strong> ${player.country}
-                </div>
-                <div class="player-info">
-                    <strong>Base Price:</strong> ₹${player.basePrice.toLocaleString()}
-                </div>
-                <div class="current-bid">
-                    <div class="amount">₹${player.currentBid.toLocaleString()}</div>
-                    ${player.currentBidder ? `<div class="current-bidder">Current Bidder: ${player.currentBidder}</div>` : '<div class="current-bidder">No bids yet</div>'}
-                </div>
-                <button class="btn btn-bid" onclick="openBidModal(${player.id})">Place Bid</button>
-            `;
-            availablePlayersDiv.appendChild(playerCard);
-        });
+        let imageHtml = player.imageUrl ? `<img src="${player.imageUrl}" alt="${player.name}" class="player-image" style="width: 200px; height: 200px; margin: 0 auto; display: block; border-radius: 50%;">` : '';
+
+        const playerCard = document.createElement('div');
+        playerCard.className = 'player-card';
+        playerCard.style.maxWidth = '600px';
+        playerCard.style.margin = '0 auto';
+        playerCard.style.textAlign = 'center';
+
+        playerCard.innerHTML = `
+            ${imageHtml}
+            <h2 style="font-size: 2rem; margin: 10px 0;">${player.name}</h2>
+            <div class="player-info" style="justify-content: center;">
+                <strong>Role:</strong> ${player.role} | <strong>Country:</strong> ${player.country}
+            </div>
+            <div class="player-info" style="justify-content: center;">
+                <strong>Base Price:</strong> ₹${player.basePrice.toLocaleString()}
+            </div>
+            
+            <div class="current-bid" style="margin: 20px 0; padding: 20px; background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px;">
+                <div style="font-size: 1rem; color: #555;">Current Highest Bid</div>
+                <div class="amount" style="font-size: 2.5rem; color: #1565c0;">₹${player.currentBid.toLocaleString()}</div>
+                ${player.currentBidder ?
+                `<div class="current-bidder" style="font-size: 1.2rem; margin-top: 10px;">Held by: <strong>${player.currentBidder}</strong></div>` :
+                '<div class="current-bidder">No bids yet</div>'}
+            </div>
+
+            <button class="btn btn-bid" style="font-size: 1.3rem; padding: 15px 40px; width: 100%;" onclick="openBidModal(${player.id})">💰 PLACE BID</button>
+        `;
+
+        if (lastBid) {
+            // Optional: Add some animation or indication of new bid if we were fancy
+        }
+
+        container.appendChild(playerCard);
+
     } catch (error) {
-        console.error('Error loading available players:', error);
+        console.error('Error loading active player:', error);
+        document.getElementById('availablePlayers').innerHTML = '<p>Error loading auction status.</p>';
     }
 }
 

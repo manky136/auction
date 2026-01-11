@@ -112,6 +112,20 @@
         <div class="dashboard">
             <h2 id="auctionTitle" style="text-align: center;"></h2>
 
+            <!-- Active Player Section -->
+            <section id="activePlayerSection" class="card"
+                style="display:none; border: 2px solid #3b82f6; background-color: #f0f9ff;">
+                <h2 style="color: #3b82f6; display: flex; align-items: center; gap: 10px;">
+                    🔥 Current Active Player
+                    <span style="font-size: 0.8rem; color: #666; font-weight: normal;">(Bidding is Live)</span>
+                </h2>
+                <div id="activePlayerCard" class="player-card large-card" style="border: none; box-shadow: none;"></div>
+                <div style="padding: 1rem; border-top: 1px solid #e0e0e0; text-align: right;">
+                    <button class="btn btn-warning" onclick="stopBidding()">⛔ Stop Bidding / Unsell</button>
+                    <!-- Sell button is inside the card usually, but good to have control -->
+                </div>
+            </section>
+
             <!-- Add Team Section -->
             <section class="card">
                 <h2>➕ Add New Team</h2>

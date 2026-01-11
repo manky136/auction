@@ -129,7 +129,36 @@ app.post('/api/auctions', authenticateToken, requireAdmin, (req, res) => {
     adminId: req.user.id,
     name,
     code,
-    status: 'active'
+    code,
+    status: 'active',
+    currentPlayerId: null
+  });
+});
+
+// Set Current Player (Admin)
+app.post('/api/admin/auctions/:id/current-player', authenticateToken, requireAdmin, (req, res) => {
+  const auctionId = parseInt(req.params.id);
+  const { playerId } = req.body;
+
+  const auction = db.prepare('SELECT * FROM auctions WHERE id = ?').get(auctionId);
+  if (!auction) return res.status(404).json({ error: 'Auction not found' });
+  if (auction.admin_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+  db.prepare('UPDATE auctions SET current_player_id = ? WHERE id = ?').run(playerId, auctionId);
+
+  res.json({ success: true, message: 'Current player updated', currentPlayerId: playerId });
+});
+
+// Get Auction Status (Polling)
+app.get('/api/auctions/:id/status', authenticateToken, (req, res) => {
+  const auctionId = parseInt(req.params.id);
+  const auction = db.prepare('SELECT * FROM auctions WHERE id = ?').get(auctionId);
+
+  if (!auction) return res.status(404).json({ error: 'Auction not found' });
+
+  res.json({
+    status: auction.status,
+    currentPlayerId: auction.current_player_id
   });
 });
 
@@ -162,7 +191,9 @@ app.post('/api/auctions/join', authenticateToken, (req, res) => {
     id: auction.id,
     name: auction.name,
     code: auction.code,
-    status: auction.status
+    code: auction.code,
+    status: auction.status,
+    currentPlayerId: auction.current_player_id
   });
 });
 
@@ -173,6 +204,13 @@ app.post('/api/auctions/:id/restart', authenticateToken, requireAdmin, (req, res
 
   if (!auction) return res.status(404).json({ error: 'Auction not found' });
   if (auction.admin_id !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+  // Reset Auction State (Current Player)
+  db.prepare(`
+    UPDATE auctions 
+    SET current_player_id = NULL
+    WHERE id = ?
+  `).run(auctionId);
 
   // Reset Teams
   db.prepare(`
@@ -498,6 +536,9 @@ app.post('/api/admin/players/:id/sell', authenticateToken, requireAdmin, (req, r
     const newBudget = team.remaining_budget - player.current_bid;
     db.prepare('UPDATE teams SET remaining_budget = ? WHERE id = ?').run(newBudget, team.id);
   }
+
+  // Clear active player
+  db.prepare('UPDATE auctions SET current_player_id = NULL WHERE id = ?').run(player.auction_id);
 
   res.json({ success: true, message: 'Player sold successfully' });
 });

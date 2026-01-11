@@ -74,7 +74,13 @@ function displayUserInfo() {
 
 // API Request Helper
 async function apiRequest(endpoint, options = {}) {
-    showLoader();
+    // Default showLoader to true unless explicitly set to false
+    const shouldShowLoader = options.showLoader !== false;
+
+    if (shouldShowLoader) {
+        showLoader();
+    }
+
     const token = getToken();
     const headers = {
         'Content-Type': 'application/json',
@@ -111,7 +117,9 @@ async function apiRequest(endpoint, options = {}) {
         console.error('API Request Error:', error);
         throw error;
     } finally {
-        hideLoader();
+        if (shouldShowLoader) {
+            hideLoader();
+        }
     }
 }
 

@@ -97,7 +97,7 @@ async function selectTeam(teamName) {
 }
 
 // Load user dashboard
-async function loadUserDashboard() {
+async function loadUserDashboard(silent = false) {
     const user = getUser();
     if (!user.team) {
         await loadTeamSelection();
@@ -107,16 +107,20 @@ async function loadUserDashboard() {
     document.getElementById('teamSelectionSection').style.display = 'none';
     document.getElementById('userDashboard').style.display = 'block';
 
-    await loadMyTeamInfo();
-    await loadActivePlayer();
-    await loadSoldPlayers();
-    await loadAllTeams();
+    const options = { showLoader: !silent };
+
+    await Promise.all([
+        loadMyTeamInfo(options),
+        loadActivePlayer(options),
+        loadSoldPlayers(options),
+        loadAllTeams(options)
+    ]);
 }
 
 // Load my team info
-async function loadMyTeamInfo() {
+async function loadMyTeamInfo(options = {}) {
     try {
-        const teams = await apiRequest(`/teams?auctionId=${currentAuction.id}`);
+        const teams = await apiRequest(`/teams?auctionId=${currentAuction.id}`, options);
         const myTeam = teams.find(t => t.name === getUser().team);
         const myTeamInfo = document.getElementById('myTeamInfo');
 
@@ -124,6 +128,36 @@ async function loadMyTeamInfo() {
             myTeamInfo.innerHTML = '<p>Team information not found.</p>';
             return;
         }
+
+        // Squad Composition Stats
+        const stats = {
+            Batsman: myTeam.players.filter(p => p.role === 'Batsman').length,
+            Bowler: myTeam.players.filter(p => p.role === 'Bowler').length,
+            'All-rounder': myTeam.players.filter(p => p.role === 'All-rounder').length,
+            'Wicket-keeper': myTeam.players.filter(p => p.role === 'Wicket-keeper').length
+        };
+        const total = myTeam.players.length || 1; // avoid divide by zero
+
+        const statsHtml = `
+            <div class="squad-stats-container">
+                <div class="stat-row">
+                    <div class="stat-label"><span>Batsmen</span> <span>${stats.Batsman}</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill fill-batsman" style="width: ${(stats.Batsman / total) * 100}%"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>Bowlers</span> <span>${stats.Bowler}</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill fill-bowler" style="width: ${(stats.Bowler / total) * 100}%"></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label"><span>All-rounders</span> <span>${stats['All-rounder']}</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill fill-allrounder" style="width: ${(stats['All-rounder'] / total) * 100}%"></div></div>
+                </div>
+                 <div class="stat-row">
+                    <div class="stat-label"><span>Wicket-keepers</span> <span>${stats['Wicket-keeper']}</span></div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill fill-wicketkeeper" style="width: ${(stats['Wicket-keeper'] / total) * 100}%"></div></div>
+                </div>
+            </div>
+        `;
 
         myTeamInfo.innerHTML = `
             <div style="margin-bottom: 20px;">
@@ -141,6 +175,8 @@ async function loadMyTeamInfo() {
                     <span style="font-weight: bold; color: white;">${myTeam.players.length}/25</span>
                 </div>
             </div>
+            
+            ${statsHtml}
 
             ${myTeam.players.length > 0 ? `
                 <div style="margin-top: 20px;">
@@ -162,9 +198,9 @@ async function loadMyTeamInfo() {
 }
 
 // Load active player (Sequential Flow)
-async function loadActivePlayer() {
+async function loadActivePlayer(options = {}) {
     try {
-        const statusRes = await apiRequest(`/auctions/${currentAuction.id}/status`);
+        const statusRes = await apiRequest(`/ auctions / ${currentAuction.id}/status`, options);
         const activePlayerId = statusRes.currentPlayerId;
         const container = document.getElementById('availablePlayers');
 
@@ -185,12 +221,18 @@ async function loadActivePlayer() {
         }
 
         // Fetch active player details
-        const player = await apiRequest(`/players/${activePlayerId}`);
-        const bids = await apiRequest(`/players/${player.id}/bids`);
+        const player = await apiRequest(`/players/${activePlayerId}`, options);
+        const bids = await apiRequest(`/players/${player.id}/bids`, options);
         const lastBid = bids[0];
 
         // RENDER ACTIVE PLAYER CARD
         let imageHtml = player.imageUrl || 'https://via.placeholder.com/300';
+
+        // Check for pulse
+        if (player.currentBid > previousBidAmount) {
+            triggerBidPulse();
+        }
+        previousBidAmount = player.currentBid;
 
         const card = document.createElement('div');
         card.className = 'glass-card hero-active-player';
@@ -216,7 +258,7 @@ async function loadActivePlayer() {
 
                 <div class="live-bid-container">
                     <div class="live-bid-label">Current Highest Bid</div>
-                    <div class="live-bid-amount">₹${player.currentBid.toLocaleString()}</div>
+                    <div class="live-bid-amount ${player.id === selectedPlayerId ? 'bid-pulse' : ''}">₹${player.currentBid.toLocaleString()}</div>
                     <div class="bid-holder">
                         ${player.currentBidder ?
                 `Held by <span style="color: #fbbf24; font-weight: bold;">${player.currentBidder}</span>` :
@@ -239,37 +281,68 @@ async function loadActivePlayer() {
 }
 
 // Load sold players
-async function loadSoldPlayers() {
+async function loadSoldPlayers(options = {}) {
     try {
-        const players = await apiRequest(`/players?auctionId=${currentAuction.id}`);
+        const players = await apiRequest(`/players?auctionId=${currentAuction.id}`, options);
         const soldPlayers = players.filter(p => p.sold);
         const soldPlayersDiv = document.getElementById('soldPlayers');
+
+        // --- 1. Top Buys Logic ---
+        const topBuys = [...soldPlayers].sort((a, b) => b.soldPrice - a.soldPrice).slice(0, 5);
+        const topBuysWidget = document.getElementById('topBuysWidget');
+        const topBuysList = document.getElementById('topBuysList');
+
+        if (topBuys.length > 0) {
+            topBuysWidget.style.display = 'block';
+            topBuysList.innerHTML = topBuys.map((p, index) => `
+                <div class="top-buy-item">
+                    <div class="top-buy-rank">#${index + 1}</div>
+                    <div class="top-buy-info">
+                        <div class="top-buy-name">${p.name}</div>
+                        <div class="top-buy-team">${p.soldTo}</div>
+                    </div>
+                    <div class="top-buy-price">₹${(p.soldPrice / 10000000).toFixed(2)}Cr</div>
+                </div>
+            `).join('');
+        }
+
+        // --- 2. Celebration Logic ---
+        // Find the most recently sold player (by ID usually, assuming sequential)
+        // Or if we check difference from last fetch. simpler: check if last item in soldPlayers differs from state
+        if (soldPlayers.length > 0) {
+            const latestSold = soldPlayers[soldPlayers.length - 1]; // Assuming time order
+            // Check if this player was just sold (not seen before in this session)
+            if (lastSoldPlayerId && latestSold.id !== lastSoldPlayerId) {
+                // New sale detected!
+                triggerCelebration(latestSold.name, latestSold.soldTo, latestSold.soldPrice);
+            }
+            lastSoldPlayerId = latestSold.id;
+        }
 
         soldPlayersDiv.innerHTML = '';
 
         if (soldPlayers.length === 0) {
-            soldPlayersDiv.innerHTML = '<p>No players sold yet.</p>';
+            soldPlayersDiv.innerHTML = '<p class="text-muted">No players sold yet.</p>';
             return;
         }
 
-        soldPlayers.forEach(player => {
+        // Show recent sales reversed (newest first)
+        [...soldPlayers].reverse().slice(0, 10).forEach(player => {
             const playerCard = document.createElement('div');
-            playerCard.className = 'player-card sold';
-
-            let imageHtml = player.imageUrl ? `<img src="${player.imageUrl}" alt="${player.name}" class="player-image">` : '';
+            playerCard.className = 'glass-card compact-team-card'; // Reusing compact card
+            playerCard.style.marginBottom = '10px';
+            playerCard.style.padding = '10px';
 
             playerCard.innerHTML = `
-                ${imageHtml}
-                <h3>${player.name}</h3>
-                <div class="player-info">
-                    <strong>Role:</strong> ${player.role}
-                </div>
-                <div class="player-info">
-                    <strong>Country:</strong> ${player.country}
-                </div>
-                <div class="sold-info">
-                    <div class="amount">₹${player.soldPrice.toLocaleString()}</div>
-                    <div>Sold to: ${player.soldTo}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                   <div>
+                       <strong style="color: white;">${player.name}</strong>
+                       <div style="font-size: 0.8rem; color: #94a3b8;">${player.role}</div>
+                   </div>
+                   <div style="text-align: right;">
+                       <div style="color: #10b981; font-weight: bold;">₹${player.soldPrice.toLocaleString()}</div>
+                       <div style="font-size: 0.8rem; color: #fbbf24;">${player.soldTo}</div>
+                   </div>
                 </div>
             `;
             soldPlayersDiv.appendChild(playerCard);
@@ -280,9 +353,9 @@ async function loadSoldPlayers() {
 }
 
 // Load all teams (New feature)
-async function loadAllTeams() {
+async function loadAllTeams(options = {}) {
     try {
-        const teams = await apiRequest(`/teams?auctionId=${currentAuction.id}`);
+        const teams = await apiRequest(`/teams?auctionId=${currentAuction.id}`, options);
         const allTeamsDiv = document.getElementById('allTeamsList');
         if (!allTeamsDiv) return;
 
@@ -290,14 +363,24 @@ async function loadAllTeams() {
 
         teams.forEach(team => {
             const teamCard = document.createElement('div');
-            teamCard.className = 'team-card compact';
+            // Use glass card style
+            teamCard.className = 'glass-card compact';
+            teamCard.style.padding = '20px';
+
             teamCard.innerHTML = `
-                <h4>${team.name}</h4>
-                <p>Remaining: ₹${team.remainingBudget.toLocaleString()}</p>
-                <p>Players: ${team.players.length}</p>
+                <h4 style="color: white; font-size: 1.2rem; margin-bottom: 8px;">${team.name}</h4>
+                <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 10px;">
+                    <p>Remaining: <span style="color: #10b981; font-weight: bold;">₹${team.remainingBudget.toLocaleString()}</span></p>
+                    <p>Players: ${team.players.length}</p>
+                </div>
                 ${team.players.length > 0 ? `
-                    <div class="team-players-list">
-                        ${team.players.map(p => `<small>${p.name} (${p.role})</small>`).join('<br>')}
+                    <div class="team-players-list" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); max-height: 100px; overflow-y: auto;">
+                        ${team.players.map(p => `
+                            <div style="font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between;">
+                                <span>${p.name}</span>
+                                <span style="color: #64748b;">${p.role.substring(0, 3)}</span>
+                            </div>
+                        `).join('')}
                     </div>
                 ` : ''}
             `;
@@ -398,9 +481,9 @@ async function openBidModal(playerId) {
 setInterval(() => {
     const user = getUser();
     if (user && user.team && currentAuction) {
-        loadUserDashboard();
+        loadUserDashboard(true); // silent = true
     }
-}, 10000); // Refresh every 10 seconds
+}, 5000); // Increased refresh rate for better responsiveness (5s)
 
 // Increase bid amount
 function increaseBid(amount) {

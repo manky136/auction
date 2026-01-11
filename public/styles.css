@@ -1729,3 +1729,318 @@ body.bidder-mode .dashboard h3 {
     }
 }
 
+
+/* Admin Mode - Premium Command Center */
+body.admin-mode {
+    background: radial-gradient(circle at top right, #0f172a 0%, #1e1b4b 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+}
+
+body.admin-mode .navbar {
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.admin-mode .card,
+body.admin-mode .player-card,
+body.admin-mode .team-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+body.admin-mode h1,
+body.admin-mode h2,
+body.admin-mode h3,
+body.admin-mode label,
+body.admin-mode strong {
+    color: white !important;
+}
+
+body.admin-mode p,
+body.admin-mode span,
+body.admin-mode small {
+    color: #cbd5e1 !important;
+}
+
+body.admin-mode input,
+body.admin-mode select,
+body.admin-mode textarea {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+}
+
+body.admin-mode input:focus,
+body.admin-mode select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Specific Admin overrides */
+body.admin-mode #activePlayerSection {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid #3b82f6 !important;
+}
+
+body.admin-mode .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body.admin-mode .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Modal Dark Fixes for Admin */
+body.admin-mode .modal-content {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.admin-mode .team-info-item {
+    background: rgba(0,0,0,0.2) !important;
+    border-color: rgba(255,255,255,0.05);
+}
+
+
+/* Responsive Design Implementation */
+@media (max-width: 900px) {
+    .dashboard-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .hero-active-player {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .hero-player-img-container {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 20px;
+    }
+    
+    .hero-player-info {
+        text-align: center;
+    }
+
+    .hero-details-grid {
+        justify-content: center;
+    }
+
+    .live-bid-amount {
+        font-size: 3rem;
+    }
+
+    .btn-mega-bid {
+        font-size: 1.2rem;
+        padding: 15px;
+    }
+
+    /* Navbar stacking */
+    .nav-container {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .nav-links {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* My Team Info Sidebar to nice card */
+    .my-team-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        font-size: 14px;
+    }
+
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.5rem; }
+
+    .btn-mega-bid {
+        width: 100%;
+    }
+
+    .teams-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-stats {
+        margin-top: 0;
+    }
+}
+
+
+/* --- Dynamic Features Styles --- */
+
+/* 1. Bid Pulse Animation */
+@keyframes pulse-green {
+    0% { transform: scale(1); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+    50% { transform: scale(1.1); text-shadow: 0 0 30px rgba(16, 185, 129, 1); color: #4ade80; }
+    100% { transform: scale(1); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+}
+
+.bid-pulse {
+    animation: pulse-green 0.6s ease-in-out;
+}
+
+/* 2. Celebration Overlay (Confetti) */
+.celebration-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+    display: none;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #f00;
+    animation: fall linear forwards;
+}
+
+.celebration-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(0, 0, 0, 0.85);
+    padding: 40px;
+    border-radius: 20px;
+    border: 2px solid #fbbf24;
+    text-align: center;
+    color: white;
+    z-index: 10000;
+    backdrop-filter: blur(10px);
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.celebration-message.show {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+@keyframes fall {
+    to { transform: translateY(100vh) rotate(720deg); }
+}
+
+/* 3. Squad Stats Bars */
+.squad-stats-container {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.stat-row {
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    margin-bottom: 4px;
+}
+
+.progress-bar-bg {
+    background: rgba(255, 255, 255, 0.1);
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 3px;
+    width: 0%;
+    transition: width 1s ease-out;
+}
+
+/* Role Colors */
+.fill-batsman { background: #3b82f6; } /* Blue */
+.fill-bowler { background: #10b981; } /* Emerald */
+.fill-allrounder { background: #fbbf24; } /* Amber */
+.fill-wicketkeeper { background: #a855f7; } /* Purple */
+
+
+/* 4. Top Buys Widget */
+.top-buys-widget {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.top-buys-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    color: #fbbf24;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.top-buy-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.top-buy-item:last-child {
+    border-bottom: none;
+}
+
+.top-buy-rank {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.2);
+    width: 30px;
+}
+
+.top-buy-info {
+    flex: 1;
+}
+
+.top-buy-name {
+    color: white;
+    font-weight: 600;
+}
+
+.top-buy-team {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.top-buy-price {
+    font-weight: bold;
+    color: #10b981;
+}
+

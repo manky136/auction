@@ -140,11 +140,18 @@
                         <div id="myTeamInfo"></div>
                     </section>
 
-                    <!-- Sold Players -->
-                    <section class="glass-card" style="max-height: 400px; overflow-y: auto;">
-                        <h2 style="font-size: 1.5rem; margin-bottom: 20px;">📜 Recent Sales</h2>
-                        <div id="soldPlayers" class="players-grid" style="grid-template-columns: 1fr;"></div>
-                    </section>
+                    <!-- Top Buys Widget -->
+                    <div id="topBuysWidget" class="glass-card top-buys-widget" style="display: none;">
+                        <div class="top-buys-header">🏆 Top Buys</div>
+                        <div id="topBuysList"></div>
+                    </div>
+
+                    <!-- Sold Players Section -->
+                    <div class="glass-card">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 20px; color: #cbd5e1;">Recent Sales</h2>
+                        <div id="soldPlayers" class="players-grid compact-grid" style="grid-template-columns: 1fr;">
+                        </div>
+                    </div>
                 </div>
 
             </div>

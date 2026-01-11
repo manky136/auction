@@ -505,3 +505,49 @@ if (document.readyState === 'loading') {
 } else {
     initUser();
 }
+
+// --- Dynamic Feature Logic ---
+function triggerBidPulse() {
+    const amountEl = document.querySelector('.live-bid-amount');
+    if (amountEl) {
+        amountEl.classList.remove('bid-pulse');
+        void amountEl.offsetWidth; // Trigger reflow
+        amountEl.classList.add('bid-pulse');
+    }
+}
+
+function triggerCelebration(player, team, price) {
+    const overlay = document.getElementById('celebrationOverlay');
+    const message = document.getElementById('celebrationMessage');
+    const details = document.getElementById('celebrationDetails');
+
+    if (!overlay || !message) return;
+
+    details.innerHTML = `<strong style='color: white;'>${player}</strong> sold to <strong style='color: #fbbf24;'>${team}</strong><br>for <span style='color: #10b981;'>₹${price.toLocaleString()}</span>`;
+
+    overlay.style.display = 'block';
+    setTimeout(() => message.classList.add('show'), 100);
+
+    // Create confetti
+    for (let i = 0; i < 50; i++) {
+        createConfetti(overlay);
+    }
+
+    // Hide after 5 seconds
+    setTimeout(() => {
+        message.classList.remove('show');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            overlay.innerHTML = '<div id="celebrationMessage" class="celebration-message"><h2 style="font-size: 3rem; margin: 0; text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);">SOLD!</h2><div id="celebrationDetails" style="font-size: 1.5rem; margin-top: 10px; color: #cbd5e1;"></div></div>';
+        }, 500);
+    }, 5000);
+}
+
+function createConfetti(container) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.backgroundColor = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'][Math.floor(Math.random() * 6)];
+    confetti.style.animationDuration = (Math.random() * 2 + 3) + 's';
+    container.appendChild(confetti);
+}

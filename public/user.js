@@ -3,7 +3,8 @@
 let selectedPlayerId = null;
 let currentAuction = null;
 let previousBidAmount = 0;
-let lastSoldPlayerId = null;
+let knownSoldPlayerIds = new Set();
+let isFirstLoad = true;
 
 // Initialize user dashboard
 async function initUser() {
@@ -309,17 +310,18 @@ async function loadSoldPlayers(options = {}) {
         }
 
         // --- 2. Celebration Logic ---
-        // Find the most recently sold player (by ID usually, assuming sequential)
-        // Or if we check difference from last fetch. simpler: check if last item in soldPlayers differs from state
-        if (soldPlayers.length > 0) {
-            const latestSold = soldPlayers[soldPlayers.length - 1]; // Assuming time order
-            // Check if this player was just sold (not seen before in this session)
-            if (lastSoldPlayerId && latestSold.id !== lastSoldPlayerId) {
-                // New sale detected!
-                triggerCelebration(latestSold.name, latestSold.soldTo, latestSold.soldPrice);
+        // Check for ANY new sales compared to what we knew before
+        soldPlayers.forEach(player => {
+            if (!knownSoldPlayerIds.has(player.id)) {
+                // This is a new sale we haven't seen before
+                if (!isFirstLoad) {
+                    triggerCelebration(player.name, player.soldTo, player.soldPrice);
+                }
+                knownSoldPlayerIds.add(player.id);
             }
-            lastSoldPlayerId = latestSold.id;
-        }
+        });
+
+        isFirstLoad = false;
 
         soldPlayersDiv.innerHTML = '';
 

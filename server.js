@@ -129,7 +129,6 @@ app.post('/api/auctions', authenticateToken, requireAdmin, (req, res) => {
     adminId: req.user.id,
     name,
     code,
-    code,
     status: 'active',
     currentPlayerId: null
   });
@@ -190,7 +189,6 @@ app.post('/api/auctions/join', authenticateToken, (req, res) => {
   res.json({
     id: auction.id,
     name: auction.name,
-    code: auction.code,
     code: auction.code,
     status: auction.status,
     currentPlayerId: auction.current_player_id

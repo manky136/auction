@@ -202,7 +202,7 @@ async function loadMyTeamInfo(options = {}) {
 // Load active player (Sequential Flow)
 async function loadActivePlayer(options = {}) {
     try {
-        const statusRes = await apiRequest(`/ auctions / ${currentAuction.id}/status`, options);
+        const statusRes = await apiRequest(`/auctions/${currentAuction.id}/status`, options);
         const activePlayerId = statusRes.currentPlayerId;
         const container = document.getElementById('availablePlayers');
 

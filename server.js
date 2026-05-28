@@ -4,8 +4,18 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { db, getTeamPlayers } = require('./database');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"]
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 const SECRET_KEY = process.env.SECRET_KEY || 'cricket-auction-secret-key-2024';
 
@@ -18,6 +28,20 @@ app.use(express.static('public'));
 function generateAuctionCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
+
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  socket.on('join_auction', (auctionId) => {
+    socket.join(`auction_${auctionId}`);
+    console.log(`User ${socket.id} joined auction ${auctionId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
@@ -145,6 +169,8 @@ app.post('/api/admin/auctions/:id/current-player', authenticateToken, requireAdm
 
   db.prepare('UPDATE auctions SET current_player_id = ? WHERE id = ?').run(playerId, auctionId);
 
+  io.to(`auction_${auctionId}`).emit('player:active', { auctionId, playerId });
+
   res.json({ success: true, message: 'Current player updated', currentPlayerId: playerId });
 });
 
@@ -230,6 +256,8 @@ app.post('/api/auctions/:id/restart', authenticateToken, requireAdmin, (req, res
 
   // Clear Bids
   db.prepare('DELETE FROM bids WHERE auction_id = ?').run(auctionId);
+
+  io.to(`auction_${auctionId}`).emit('auction:restarted', { auctionId });
 
   res.json({ success: true, message: 'Auction restarted successfully' });
 });
@@ -538,6 +566,13 @@ app.post('/api/admin/players/:id/sell', authenticateToken, requireAdmin, (req, r
   // Clear active player
   db.prepare('UPDATE auctions SET current_player_id = NULL WHERE id = ?').run(player.auction_id);
 
+  io.to(`auction_${player.auction_id}`).emit('player:sold', { 
+    player: { id: playerId, name: player.name }, 
+    team: player.current_bidder, 
+    price: player.current_bid 
+  });
+  io.to(`auction_${player.auction_id}`).emit('teams:updated', { auctionId: player.auction_id });
+
   res.json({ success: true, message: 'Player sold successfully' });
 });
 
@@ -586,6 +621,14 @@ app.post('/api/bids', authenticateToken, (req, res) => {
     SET current_bid = ?, current_bidder = ?
     WHERE id = ?
   `).run(amount, team, playerId);
+
+  io.to(`auction_${auctionId}`).emit('bid:placed', {
+    playerId,
+    amount,
+    team,
+    currentBid: amount,
+    currentBidder: team
+  });
 
   res.json({ success: true, message: 'Bid placed successfully' });
 });
@@ -688,7 +731,7 @@ app.post('/api/admin/players/bulk', authenticateToken, requireAdmin, (req, res) 
 });
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log('Database: SQLite (auction.db)');

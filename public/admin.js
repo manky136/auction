@@ -1,6 +1,7 @@
 // Admin dashboard functionality
 
 let currentAuction = null;
+let socket = null;
 
 // Initialize admin dashboard
 async function initAdmin() {
@@ -21,6 +22,9 @@ async function initAdmin() {
     }
     currentAuction = JSON.parse(auctionData);
     document.getElementById('auctionTitle').textContent = `🏏 ${currentAuction.name} (Code: ${currentAuction.code})`;
+
+    // Initialize socket
+    setupSocket();
 
     displayUserInfo();
     loadTeams();
@@ -621,6 +625,39 @@ async function saveToLibrary(playerId) {
         showSuccess('Player saved to library!');
     } catch (error) {
         showError('Failed to save to library: ' + error.message);
+    }
+}
+
+// Socket setup
+function setupSocket() {
+    if (!socket && currentAuction) {
+        socket = io();
+        socket.on('connect', () => {
+            console.log('Connected to socket server (Admin)');
+            socket.emit('join_auction', currentAuction.id);
+        });
+
+        socket.on('player:active', (data) => {
+            loadPlayers();
+        });
+
+        socket.on('bid:placed', (data) => {
+            loadPlayers();
+        });
+
+        socket.on('player:sold', (data) => {
+            loadPlayers();
+            loadTeams();
+        });
+
+        socket.on('auction:restarted', (data) => {
+            loadTeams();
+            loadPlayers();
+        });
+
+        socket.on('teams:updated', (data) => {
+            loadTeams();
+        });
     }
 }
 

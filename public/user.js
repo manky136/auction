@@ -5,6 +5,7 @@ let currentAuction = null;
 let previousBidAmount = 0;
 let knownSoldPlayerIds = new Set();
 let isFirstLoad = true;
+let socket = null;
 
 // Initialize user dashboard
 async function initUser() {
@@ -23,6 +24,9 @@ async function initUser() {
         return;
     }
     currentAuction = JSON.parse(auctionData);
+
+    // Initialize socket
+    setupSocket();
 
     // Display auction info
     const navContainer = document.querySelector('.nav-container h1');
@@ -481,13 +485,7 @@ async function openBidModal(playerId) {
     }
 }
 
-// Refresh dashboard periodically
-setInterval(() => {
-    const user = getUser();
-    if (user && user.team && currentAuction) {
-        loadUserDashboard(true); // silent = true
-    }
-}, 5000); // Increased refresh rate for better responsiveness (5s)
+// Removed periodic polling - using WebSocket instead
 
 // Increase bid amount
 function increaseBid(amount) {
@@ -499,6 +497,64 @@ function increaseBid(amount) {
     const baseAmount = currentInput < currentBid ? currentBid : currentInput;
 
     bidInput.value = baseAmount + amount;
+}
+
+// Socket setup
+function setupSocket() {
+    if (!socket && currentAuction) {
+        socket = io();
+        socket.on('connect', () => {
+            console.log('Connected to socket server');
+            socket.emit('join_auction', currentAuction.id);
+        });
+
+        socket.on('player:active', (data) => {
+            loadActivePlayer({ showLoader: false });
+        });
+
+        socket.on('bid:placed', (data) => {
+            if (selectedPlayerId === data.playerId) {
+                document.getElementById('currentBid').textContent = data.amount.toLocaleString();
+                document.getElementById('bidAmount').dataset.currentBid = data.amount;
+                
+                // Set default bid to new current + 10k
+                const defaultBid = data.amount + 10000;
+                document.getElementById('bidAmount').value = defaultBid;
+                document.getElementById('bidAmount').min = data.amount + 1;
+                
+                // Add to history dynamically
+                const bidHistory = document.getElementById('bidHistory');
+                if (bidHistory) {
+                   const item = document.createElement('div');
+                   item.className = 'bid-item';
+                   item.innerHTML = \`<span class="bid-team">\${data.team}</span><span class="bid-amount">₹\${data.amount.toLocaleString()}</span>\`;
+                   // Remove "No bids yet" if present
+                   if(bidHistory.innerHTML.includes('No bids yet')) { bidHistory.innerHTML = '<h4>Bid History</h4>'; }
+                   bidHistory.insertBefore(item, bidHistory.children[1]); // Insert after h4
+                }
+            }
+            loadActivePlayer({ showLoader: false });
+        });
+
+        socket.on('player:sold', (data) => {
+            triggerCelebration(data.player.name, data.team, data.price);
+            loadSoldPlayers({ showLoader: false });
+            loadAllTeams({ showLoader: false });
+            loadActivePlayer({ showLoader: false });
+            if (selectedPlayerId === data.player.id) {
+                document.getElementById('bidModal').style.display = 'none';
+            }
+        });
+
+        socket.on('auction:restarted', (data) => {
+            loadUserDashboard(true);
+        });
+
+        socket.on('teams:updated', (data) => {
+            loadMyTeamInfo({ showLoader: false });
+            loadAllTeams({ showLoader: false });
+        });
+    }
 }
 
 // Initialize when page loads

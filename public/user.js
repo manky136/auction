@@ -527,8 +527,7 @@ function setupSocket() {
                 if (bidHistory) {
                    const item = document.createElement('div');
                    item.className = 'bid-item';
-                   item.innerHTML = \`<span class="bid-team">\${data.team}</span><span class="bid-amount">₹\${data.amount.toLocaleString()}</span>\`;
-                   // Remove "No bids yet" if present
+                   item.innerHTML = `<span class="bid-team">${data.team}</span><span class="bid-amount">₹${data.amount.toLocaleString()}</span>`;
                    if(bidHistory.innerHTML.includes('No bids yet')) { bidHistory.innerHTML = '<h4>Bid History</h4>'; }
                    bidHistory.insertBefore(item, bidHistory.children[1]); // Insert after h4
                 }
